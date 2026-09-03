@@ -139,6 +139,122 @@ public class Analysis {
         );
     }
 
+    public void start() {
+        requireStatus(AnalysisStatus.QUEUED);
+
+        status = AnalysisStatus.RUNNING;
+        startedAt = Instant.now();
+    }
+
+    public void complete(
+            int securityScore,
+            int filesScanned,
+            long linesScanned,
+            int findingsCount
+    ) {
+        requireStatus(AnalysisStatus.RUNNING);
+
+        validateSecurityScore(securityScore);
+        validateNonNegative(filesScanned, "filesScanned");
+        validateNonNegative(linesScanned, "linesScanned");
+        validateNonNegative(findingsCount, "findingsCount");
+
+        status = AnalysisStatus.COMPLETED;
+        this.securityScore = (short) securityScore;
+        this.filesScanned = filesScanned;
+        this.linesScanned = linesScanned;
+        this.findingsCount = findingsCount;
+        completedAt = Instant.now();
+        failureCode = null;
+        failureMessage = null;
+    }
+
+    public void fail(
+            String failureCode,
+            String failureMessage
+    ) {
+        if (status != AnalysisStatus.QUEUED
+                && status != AnalysisStatus.RUNNING) {
+            throw new IllegalStateException(
+                    "Analysis must be QUEUED or RUNNING"
+            );
+        }
+
+        String validatedCode = requireText(
+                failureCode,
+                "failureCode"
+        );
+
+        String validatedMessage = requireText(
+                failureMessage,
+                "failureMessage"
+        );
+
+        if (validatedCode.length() > 50) {
+            throw new IllegalArgumentException(
+                    "failureCode must not exceed 50 characters"
+            );
+        }
+
+        if (validatedMessage.length() > 500) {
+            throw new IllegalArgumentException(
+                    "failureMessage must not exceed 500 characters"
+            );
+        }
+
+        Instant now = Instant.now();
+
+        if (startedAt == null) {
+            startedAt = now;
+        }
+
+        status = AnalysisStatus.FAILED;
+        this.failureCode = validatedCode;
+        this.failureMessage = validatedMessage;
+        completedAt = now;
+    }
+
+    public void cancel() {
+        if (status != AnalysisStatus.QUEUED
+                && status != AnalysisStatus.RUNNING) {
+            throw new IllegalStateException(
+                    "Analysis must be QUEUED or RUNNING"
+            );
+        }
+
+        status = AnalysisStatus.CANCELLED;
+        completedAt = Instant.now();
+    }
+
+    private void requireStatus(
+            AnalysisStatus requiredStatus
+    ) {
+        if (status != requiredStatus) {
+            throw new IllegalStateException(
+                    "Analysis must be " + requiredStatus
+            );
+        }
+    }
+
+    private void validateSecurityScore(int value) {
+        if (value < 0 || value > 100) {
+            throw new IllegalArgumentException(
+                    "securityScore must be between 0 and 100"
+            );
+        }
+    }
+
+    private void validateNonNegative(
+            long value,
+            String fieldName
+    ) {
+        if (value < 0) {
+            throw new IllegalArgumentException(
+                    fieldName + " must not be negative"
+            );
+        }
+    }
+
     @PrePersist
     private void onCreate() {
         if (id == null) {

@@ -4,6 +4,7 @@ import com.codefortress.identity.authentication.InvalidCredentialsException;
 import com.codefortress.identity.authentication.refresh.InvalidRefreshTokenException;
 import com.codefortress.identity.registration.EmailAlreadyRegisteredException;
 import com.codefortress.identity.user.CurrentUserUnavailableException;
+import com.codefortress.project.creation.ProjectNameAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -102,6 +103,19 @@ public class ApiExceptionHandler {
     ) {
         return new ApiErrorResponse(
                 "AUTHENTICATED_USER_UNAVAILABLE",
+                exception.getMessage(),
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(ProjectNameAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiErrorResponse handleProjectNameAlreadyExists(
+            ProjectNameAlreadyExistsException exception
+    ) {
+        return new ApiErrorResponse(
+                "PROJECT_NAME_ALREADY_EXISTS",
                 exception.getMessage(),
                 Map.of(),
                 Instant.now()

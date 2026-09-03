@@ -1,0 +1,159 @@
+package com.codefortress.project.api;
+
+import com.codefortress.identity.authentication.LoginCommand;
+import com.codefortress.identity.authentication.LoginService;
+import com.codefortress.identity.registration.RegisterUserCommand;
+import com.codefortress.identity.registration.RegisterUserService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class ProjectControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private RegisterUserService registerUserService;
+
+    @Autowired
+    private LoginService loginService;
+
+    @Test
+    void shouldCreateProjectForAuthenticatedUser() throws Exception {
+        String accessToken = registerAndLogin();
+
+        mockMvc.perform(post("/api/v1/projects")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + accessToken
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "  CodeFortress API  ",
+                                  "description": "  Security analysis backend  "
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.name")
+                        .value("CodeFortress API"))
+                .andExpect(jsonPath("$.description")
+                        .value("Security analysis backend"))
+                .andExpect(jsonPath("$.status")
+                        .value("ACTIVE"))
+                .andExpect(jsonPath("$.createdAt").isNotEmpty())
+                .andExpect(jsonPath("$.updatedAt").isNotEmpty());
+    }
+
+    @Test
+    void shouldRejectDuplicatedActiveProjectName() throws Exception {
+        String accessToken = registerAndLogin();
+
+        createProject(accessToken, "CodeFortress");
+
+        mockMvc.perform(post("/api/v1/projects")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + accessToken
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "  codefortress  ",
+                                  "description": "Duplicated project"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code")
+                        .value("PROJECT_NAME_ALREADY_EXISTS"))
+                .andExpect(jsonPath("$.message")
+                        .value(
+                                "An active project with this name already exists"
+                        ));
+    }
+
+    @Test
+    void shouldRejectInvalidProjectRequest() throws Exception {
+        String accessToken = registerAndLogin();
+
+        mockMvc.perform(post("/api/v1/projects")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + accessToken
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "   ",
+                                  "description": "Invalid project"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code")
+                        .value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.name").exists());
+    }
+
+    @Test
+    void shouldRequireAuthenticationToCreateProject()
+            throws Exception {
+        mockMvc.perform(post("/api/v1/projects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "CodeFortress",
+                                  "description": "Security platform"
+                                }
+                                """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private void createProject(
+            String accessToken,
+            String name
+    ) throws Exception {
+        mockMvc.perform(post("/api/v1/projects")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + accessToken
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "%s"
+                                }
+                                """.formatted(name)))
+                .andExpect(status().isCreated());
+    }
+
+    private String registerAndLogin() {
+        registerUserService.register(
+                new RegisterUserCommand(
+                        "Kayque Miguel",
+                        "kayque@example.com",
+                        "correct-password"
+                )
+        );
+
+        return loginService.login(
+                new LoginCommand(
+                        "kayque@example.com",
+                        "correct-password"
+                )
+        ).accessToken().value();
+    }
+}

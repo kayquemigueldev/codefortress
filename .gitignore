@@ -3,3 +3,4 @@
 !.env.example
 .idea/
 backend/target/
+.codefortress/

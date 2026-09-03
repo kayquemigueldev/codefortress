@@ -4,6 +4,7 @@ import com.codefortress.project.ProjectStatus;
 import com.codefortress.project.creation.CreatedProject;
 import com.codefortress.project.details.ProjectDetails;
 import com.codefortress.project.listing.ListedProject;
+import com.codefortress.project.update.UpdatedProject;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,6 +17,19 @@ public record ProjectResponse(
         Instant createdAt,
         Instant updatedAt
 ) {
+
+    public static ProjectResponse from(
+            UpdatedProject project
+    ) {
+        return new ProjectResponse(
+                project.id(),
+                project.name(),
+                project.description(),
+                project.status(),
+                project.createdAt(),
+                project.updatedAt()
+        );
+    }
 
     public static ProjectResponse from(
             CreatedProject project

@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -155,6 +156,147 @@ class ProjectControllerTest {
                         "/api/v1/projects/{projectId}",
                         UUID.randomUUID()
                 ))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldUpdateProjectBelongingToAuthenticatedUser()
+            throws Exception {
+        LoginResult loginResult = registerAndLoginWithResult();
+
+        CreatedProject project = createProjectService.create(
+                new CreateProjectCommand(
+                        loginResult.userId(),
+                        "Old Name",
+                        "Old description"
+                )
+        );
+
+        mockMvc.perform(put(
+                        "/api/v1/projects/{projectId}",
+                        project.id()
+                )
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer "
+                                        + loginResult.accessToken().value()
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "name": "  New Name  ",
+                              "description": "  New description  "
+                            }
+                            """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id")
+                        .value(project.id().toString()))
+                .andExpect(jsonPath("$.name")
+                        .value("New Name"))
+                .andExpect(jsonPath("$.description")
+                        .value("New description"))
+                .andExpect(jsonPath("$.status")
+                        .value("ACTIVE"));
+    }
+
+    @Test
+    void shouldHideProjectWhenUpdatedByAnotherUser()
+            throws Exception {
+        LoginResult ownerLogin = registerAndLoginWithResult();
+
+        CreatedProject project = createProjectService.create(
+                new CreateProjectCommand(
+                        ownerLogin.userId(),
+                        "Private Project",
+                        null
+                )
+        );
+
+        registerUserService.register(
+                new RegisterUserCommand(
+                        "Another User",
+                        "another@example.com",
+                        "another-password"
+                )
+        );
+
+        LoginResult anotherLogin = loginService.login(
+                new LoginCommand(
+                        "another@example.com",
+                        "another-password"
+                )
+        );
+
+        mockMvc.perform(put(
+                        "/api/v1/projects/{projectId}",
+                        project.id()
+                )
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer "
+                                        + anotherLogin.accessToken().value()
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "name": "Stolen Project",
+                              "description": null
+                            }
+                            """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code")
+                        .value("PROJECT_NOT_FOUND"));
+    }
+
+    @Test
+    void shouldRejectInvalidProjectUpdate()
+            throws Exception {
+        LoginResult loginResult = registerAndLoginWithResult();
+
+        CreatedProject project = createProjectService.create(
+                new CreateProjectCommand(
+                        loginResult.userId(),
+                        "CodeFortress",
+                        null
+                )
+        );
+
+        mockMvc.perform(put(
+                        "/api/v1/projects/{projectId}",
+                        project.id()
+                )
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer "
+                                        + loginResult.accessToken().value()
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "name": "   ",
+                              "description": "Invalid update"
+                            }
+                            """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code")
+                        .value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.name").exists());
+    }
+
+    @Test
+    void shouldRequireAuthenticationToUpdateProject()
+            throws Exception {
+        mockMvc.perform(put(
+                        "/api/v1/projects/{projectId}",
+                        UUID.randomUUID()
+                )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "name": "Updated Project",
+                              "description": null
+                            }
+                            """))
                 .andExpect(status().isUnauthorized());
     }
 

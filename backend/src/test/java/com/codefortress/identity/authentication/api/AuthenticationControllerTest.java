@@ -2,20 +2,23 @@ package com.codefortress.identity.authentication.api;
 
 import com.codefortress.identity.registration.RegisterUserCommand;
 import com.codefortress.identity.registration.RegisterUserService;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.hamcrest.Matchers.containsString;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -68,6 +71,62 @@ class AuthenticationControllerTest {
     }
 
     @Test
+    void shouldRefreshAuthenticatedSession() throws Exception {
+        registerUser();
+
+        MvcResult loginResult = mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                          "email": "kayque@example.com",
+                                          "password": "correct-password"
+                                        }
+                                        """)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie initialRefreshCookie =
+                extractRefreshCookie(loginResult);
+
+        MvcResult refreshResult = mockMvc.perform(
+                        post("/api/v1/auth/refresh")
+                                .cookie(initialRefreshCookie)
+                )
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("codefortress_refresh=")
+                ))
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("HttpOnly")
+                ))
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("SameSite=Strict")
+                ))
+                .andExpect(header().string(
+                        HttpHeaders.SET_COOKIE,
+                        containsString("Path=/api/v1/auth")
+                ))
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.expiresAt").isNotEmpty())
+                .andExpect(jsonPath("$.user.id").isNotEmpty())
+                .andExpect(jsonPath("$.user.email")
+                        .value("kayque@example.com"))
+                .andReturn();
+
+        Cookie rotatedRefreshCookie =
+                extractRefreshCookie(refreshResult);
+
+        assertThat(rotatedRefreshCookie.getValue())
+                .isNotEqualTo(initialRefreshCookie.getValue());
+    }
+
+    @Test
     void shouldRejectInvalidCredentials() throws Exception {
         registerUser();
 
@@ -101,6 +160,30 @@ class AuthenticationControllerTest {
                         .value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.fieldErrors.email").exists())
                 .andExpect(jsonPath("$.fieldErrors.password").exists());
+    }
+
+    private Cookie extractRefreshCookie(MvcResult result) {
+        String setCookie = result
+                .getResponse()
+                .getHeader(HttpHeaders.SET_COOKIE);
+
+        assertThat(setCookie).isNotBlank();
+
+        String prefix = "codefortress_refresh=";
+
+        assertThat(setCookie).startsWith(prefix);
+
+        int valueEnd = setCookie.indexOf(';');
+
+        String rawRefreshToken = setCookie.substring(
+                prefix.length(),
+                valueEnd
+        );
+
+        return new Cookie(
+                "codefortress_refresh",
+                rawRefreshToken
+        );
     }
 
     private void registerUser() {

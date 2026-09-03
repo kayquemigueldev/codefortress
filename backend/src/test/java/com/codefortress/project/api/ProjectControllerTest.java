@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -57,6 +58,31 @@ class ProjectControllerTest {
                         .value("ACTIVE"))
                 .andExpect(jsonPath("$.createdAt").isNotEmpty())
                 .andExpect(jsonPath("$.updatedAt").isNotEmpty());
+    }
+
+    @Test
+    void shouldListProjectsFromAuthenticatedUserNewestFirst()
+            throws Exception {
+        String accessToken = registerAndLogin();
+
+        createProject(accessToken, "First Project");
+        createProject(accessToken, "Second Project");
+
+        mockMvc.perform(get("/api/v1/projects")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + accessToken
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].name")
+                        .value("Second Project"))
+                .andExpect(jsonPath("$[0].status")
+                        .value("ACTIVE"))
+                .andExpect(jsonPath("$[1].name")
+                        .value("First Project"))
+                .andExpect(jsonPath("$[1].status")
+                        .value("ACTIVE"));
     }
 
     @Test
@@ -119,6 +145,13 @@ class ProjectControllerTest {
                                   "description": "Security platform"
                                 }
                                 """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldRequireAuthenticationToListProjects()
+            throws Exception {
+        mockMvc.perform(get("/api/v1/projects"))
                 .andExpect(status().isUnauthorized());
     }
 

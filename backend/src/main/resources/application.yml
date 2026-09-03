@@ -36,8 +36,8 @@ security:
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:15m}
     refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:P30D}
 
-    refresh-cookie:
-      name: codefortress_refresh
-      secure: ${REFRESH_COOKIE_SECURE:false}
-      same-site: Strict
-      path: /api/v1/auth
+  refresh-cookie:
+    name: codefortress_refresh
+    secure: ${REFRESH_COOKIE_SECURE:false}
+    same-site: Strict
+    path: /api/v1/auth

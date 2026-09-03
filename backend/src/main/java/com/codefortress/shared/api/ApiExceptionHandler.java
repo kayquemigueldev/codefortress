@@ -2,6 +2,7 @@ package com.codefortress.shared.api;
 
 import com.codefortress.identity.registration.EmailAlreadyRegisteredException;
 import com.codefortress.identity.authentication.InvalidCredentialsException;
+import com.codefortress.identity.user.CurrentUserUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -74,6 +75,19 @@ public class ApiExceptionHandler {
     ) {
         return new ApiErrorResponse(
                 "INVALID_CREDENTIALS",
+                exception.getMessage(),
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(CurrentUserUnavailableException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiErrorResponse handleCurrentUserUnavailable(
+            CurrentUserUnavailableException exception
+    ) {
+        return new ApiErrorResponse(
+                "AUTHENTICATED_USER_UNAVAILABLE",
                 exception.getMessage(),
                 Map.of(),
                 Instant.now()

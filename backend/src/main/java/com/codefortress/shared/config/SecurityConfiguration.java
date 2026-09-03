@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 public class SecurityConfiguration {
@@ -23,6 +24,10 @@ public class SecurityConfiguration {
                                 "/api/v1/system/status",
                                 "/actuator/health",
                                 "/actuator/health/**"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/auth/register"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -9,6 +9,7 @@ import com.codefortress.project.listing.ListProjectsService;
 import com.codefortress.project.update.UpdateProjectCommand;
 import com.codefortress.project.update.UpdateProjectService;
 import com.codefortress.project.update.UpdatedProject;
+import com.codefortress.project.archiving.ArchiveProjectService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,17 +35,20 @@ public class ProjectController {
     private final ListProjectsService listProjectsService;
     private final GetProjectService getProjectService;
     private final UpdateProjectService updateProjectService;
+    private final ArchiveProjectService archiveProjectService;
 
     public ProjectController(
             CreateProjectService createProjectService,
             ListProjectsService listProjectsService,
             GetProjectService getProjectService,
-            UpdateProjectService updateProjectService
+            UpdateProjectService updateProjectService,
+            ArchiveProjectService archiveProjectService
     ) {
         this.createProjectService = createProjectService;
         this.listProjectsService = listProjectsService;
         this.getProjectService = getProjectService;
         this.updateProjectService = updateProjectService;
+        this.archiveProjectService = archiveProjectService;
     }
 
     @PostMapping
@@ -113,5 +118,16 @@ public class ProjectController {
                 );
 
         return ProjectResponse.from(updatedProject);
+    }
+
+    @DeleteMapping("/{projectId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void archiveProject(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID projectId
+    ) {
+        UUID ownerId = UUID.fromString(jwt.getSubject());
+
+        archiveProjectService.archive(ownerId, projectId);
     }
 }

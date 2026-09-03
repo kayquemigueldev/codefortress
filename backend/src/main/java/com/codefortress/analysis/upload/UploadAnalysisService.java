@@ -1,8 +1,10 @@
 package com.codefortress.analysis.upload;
 
+import com.codefortress.analysis.execution.AnalysisQueuedEvent;
 import com.codefortress.analysis.queue.QueueAnalysisCommand;
 import com.codefortress.analysis.queue.QueueAnalysisService;
 import com.codefortress.analysis.queue.QueuedAnalysis;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -17,15 +19,18 @@ public class UploadAnalysisService {
     private final SourceArchiveInspector archiveInspector;
     private final LocalSourceArchiveStorage archiveStorage;
     private final QueueAnalysisService queueAnalysisService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UploadAnalysisService(
             SourceArchiveInspector archiveInspector,
             LocalSourceArchiveStorage archiveStorage,
-            QueueAnalysisService queueAnalysisService
+            QueueAnalysisService queueAnalysisService,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.archiveInspector = archiveInspector;
         this.archiveStorage = archiveStorage;
         this.queueAnalysisService = queueAnalysisService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -62,6 +67,12 @@ public class UploadAnalysisService {
                     "The stored source archive size is invalid"
             );
         }
+
+        eventPublisher.publishEvent(
+                new AnalysisQueuedEvent(
+                        queuedAnalysis.id()
+                )
+        );
 
         return UploadedAnalysis.from(
                 queuedAnalysis,

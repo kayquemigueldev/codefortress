@@ -2,6 +2,11 @@ spring:
   application:
     name: codefortress-api
 
+  servlet:
+    multipart:
+      max-file-size: ${ANALYSIS_UPLOAD_MAX_SIZE:10MB}
+      max-request-size: ${ANALYSIS_UPLOAD_MAX_REQUEST_SIZE:11MB}
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:codefortress}}
     username: ${DB_USERNAME:${POSTGRES_USER:codefortress}}

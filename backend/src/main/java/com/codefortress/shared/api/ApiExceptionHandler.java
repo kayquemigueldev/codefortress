@@ -4,6 +4,8 @@ import com.codefortress.identity.authentication.InvalidCredentialsException;
 import com.codefortress.identity.authentication.refresh.InvalidRefreshTokenException;
 import com.codefortress.identity.registration.EmailAlreadyRegisteredException;
 import com.codefortress.identity.user.CurrentUserUnavailableException;
+import com.codefortress.analysis.upload.InvalidSourceArchiveException;
+import com.codefortress.analysis.upload.SourceArchiveStorageException;
 import com.codefortress.project.creation.ProjectNameAlreadyExistsException;
 import com.codefortress.project.details.ProjectNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -130,6 +133,45 @@ public class ApiExceptionHandler {
     ) {
         return new ApiErrorResponse(
                 "PROJECT_NOT_FOUND",
+                exception.getMessage(),
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(InvalidSourceArchiveException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiErrorResponse handleInvalidSourceArchive(
+            InvalidSourceArchiveException exception
+    ) {
+        return new ApiErrorResponse(
+                exception.getCode(),
+                exception.getMessage(),
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    public ApiErrorResponse handleMaximumUploadSize(
+            MaxUploadSizeExceededException exception
+    ) {
+        return new ApiErrorResponse(
+                "SOURCE_ARCHIVE_TOO_LARGE",
+                "The source archive exceeds the allowed size",
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(SourceArchiveStorageException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiErrorResponse handleSourceArchiveStorage(
+            SourceArchiveStorageException exception
+    ) {
+        return new ApiErrorResponse(
+                exception.getCode(),
                 exception.getMessage(),
                 Map.of(),
                 Instant.now()

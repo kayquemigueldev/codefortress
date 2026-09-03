@@ -15,6 +15,13 @@ public interface ProjectRepository
             ProjectStatus status
     );
 
+    boolean existsByOwner_IdAndNameIgnoreCaseAndStatusAndIdNot(
+            UUID ownerId,
+            String name,
+            ProjectStatus status,
+            UUID excludedProjectId
+    );
+
     Optional<Project> findByIdAndOwner_Id(
             UUID projectId,
             UUID ownerId

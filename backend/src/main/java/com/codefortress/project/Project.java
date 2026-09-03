@@ -80,6 +80,20 @@ public class Project {
         status = ProjectStatus.ARCHIVED;
     }
 
+    public void updateDetails(
+            String name,
+            String description
+    ) {
+        if (status == ProjectStatus.ARCHIVED) {
+            throw new IllegalStateException(
+                    "Archived project cannot be updated"
+            );
+        }
+
+        this.name = requireText(name, "name");
+        this.description = normalizeDescription(description);
+    }
+
     @PrePersist
     private void onCreate() {
         Instant now = Instant.now();

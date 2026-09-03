@@ -1,6 +1,7 @@
 package com.codefortress.shared.api;
 
 import com.codefortress.identity.registration.EmailAlreadyRegisteredException;
+import com.codefortress.identity.authentication.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -60,6 +61,19 @@ public class ApiExceptionHandler {
     ) {
         return new ApiErrorResponse(
                 "INVALID_ARGUMENT",
+                exception.getMessage(),
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiErrorResponse handleInvalidCredentials(
+            InvalidCredentialsException exception
+    ) {
+        return new ApiErrorResponse(
+                "INVALID_CREDENTIALS",
                 exception.getMessage(),
                 Map.of(),
                 Instant.now()

@@ -2,8 +2,12 @@ package com.codefortress.project.api;
 
 import com.codefortress.identity.authentication.LoginCommand;
 import com.codefortress.identity.authentication.LoginService;
+import com.codefortress.identity.authentication.LoginResult;
 import com.codefortress.identity.registration.RegisterUserCommand;
 import com.codefortress.identity.registration.RegisterUserService;
+import com.codefortress.project.creation.CreateProjectCommand;
+import com.codefortress.project.creation.CreateProjectService;
+import com.codefortress.project.creation.CreatedProject;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +16,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,6 +37,9 @@ class ProjectControllerTest {
 
     @Autowired
     private LoginService loginService;
+
+    @Autowired
+    private CreateProjectService createProjectService;
 
     @Test
     void shouldCreateProjectForAuthenticatedUser() throws Exception {
@@ -83,6 +92,70 @@ class ProjectControllerTest {
                         .value("First Project"))
                 .andExpect(jsonPath("$[1].status")
                         .value("ACTIVE"));
+    }
+
+    @Test
+    void shouldGetProjectBelongingToAuthenticatedUser()
+            throws Exception {
+        LoginResult loginResult = registerAndLoginWithResult();
+
+        CreatedProject project = createProjectService.create(
+                new CreateProjectCommand(
+                        loginResult.userId(),
+                        "CodeFortress",
+                        "Security analysis platform"
+                )
+        );
+
+        mockMvc.perform(get(
+                        "/api/v1/projects/{projectId}",
+                        project.id()
+                )
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer "
+                                        + loginResult.accessToken().value()
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id")
+                        .value(project.id().toString()))
+                .andExpect(jsonPath("$.name")
+                        .value("CodeFortress"))
+                .andExpect(jsonPath("$.description")
+                        .value("Security analysis platform"))
+                .andExpect(jsonPath("$.status")
+                        .value("ACTIVE"));
+    }
+
+    @Test
+    void shouldReturnNotFoundForUnknownProject()
+            throws Exception {
+        String accessToken = registerAndLogin();
+        UUID unknownProjectId = UUID.randomUUID();
+
+        mockMvc.perform(get(
+                        "/api/v1/projects/{projectId}",
+                        unknownProjectId
+                )
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + accessToken
+                        ))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code")
+                        .value("PROJECT_NOT_FOUND"))
+                .andExpect(jsonPath("$.message")
+                        .value("Project not found"));
+    }
+
+    @Test
+    void shouldRequireAuthenticationToGetProject()
+            throws Exception {
+        mockMvc.perform(get(
+                        "/api/v1/projects/{projectId}",
+                        UUID.randomUUID()
+                ))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -174,6 +247,12 @@ class ProjectControllerTest {
     }
 
     private String registerAndLogin() {
+        return registerAndLoginWithResult()
+                .accessToken()
+                .value();
+    }
+
+    private LoginResult registerAndLoginWithResult() {
         registerUserService.register(
                 new RegisterUserCommand(
                         "Kayque Miguel",
@@ -187,6 +266,6 @@ class ProjectControllerTest {
                         "kayque@example.com",
                         "correct-password"
                 )
-        ).accessToken().value();
+        );
     }
 }

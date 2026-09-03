@@ -3,12 +3,15 @@ package com.codefortress.project.api;
 import com.codefortress.project.creation.CreateProjectCommand;
 import com.codefortress.project.creation.CreateProjectService;
 import com.codefortress.project.creation.CreatedProject;
+import com.codefortress.project.details.GetProjectService;
+import com.codefortress.project.details.ProjectDetails;
 import com.codefortress.project.listing.ListProjectsService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,13 +27,16 @@ public class ProjectController {
 
     private final CreateProjectService createProjectService;
     private final ListProjectsService listProjectsService;
+    private final GetProjectService getProjectService;
 
     public ProjectController(
             CreateProjectService createProjectService,
-            ListProjectsService listProjectsService
+            ListProjectsService listProjectsService,
+            GetProjectService getProjectService
     ) {
         this.createProjectService = createProjectService;
         this.listProjectsService = listProjectsService;
+        this.getProjectService = getProjectService;
     }
 
     @PostMapping
@@ -64,5 +70,20 @@ public class ProjectController {
                 .stream()
                 .map(ProjectResponse::from)
                 .toList();
+    }
+
+    @GetMapping("/{projectId}")
+    public ProjectResponse getProject(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID projectId
+    ) {
+        UUID ownerId = UUID.fromString(jwt.getSubject());
+
+        ProjectDetails project = getProjectService.get(
+                ownerId,
+                projectId
+        );
+
+        return ProjectResponse.from(project);
     }
 }

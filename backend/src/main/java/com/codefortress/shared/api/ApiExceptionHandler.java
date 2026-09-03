@@ -5,6 +5,7 @@ import com.codefortress.identity.authentication.refresh.InvalidRefreshTokenExcep
 import com.codefortress.identity.registration.EmailAlreadyRegisteredException;
 import com.codefortress.identity.user.CurrentUserUnavailableException;
 import com.codefortress.project.creation.ProjectNameAlreadyExistsException;
+import com.codefortress.project.details.ProjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -116,6 +117,19 @@ public class ApiExceptionHandler {
     ) {
         return new ApiErrorResponse(
                 "PROJECT_NAME_ALREADY_EXISTS",
+                exception.getMessage(),
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(ProjectNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiErrorResponse handleProjectNotFound(
+            ProjectNotFoundException exception
+    ) {
+        return new ApiErrorResponse(
+                "PROJECT_NOT_FOUND",
                 exception.getMessage(),
                 Map.of(),
                 Instant.now()

@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:h2:mem:codefortress;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
     username: sa
-    password:
+    password: ""
 
   jpa:
     open-in-view: false
@@ -19,3 +19,9 @@ security:
     issuer: https://api.codefortress.local
     access-token-ttl: 15m
     refresh-token-ttl: P30D
+
+  refresh-cookie:
+    name: codefortress_refresh
+    secure: false
+    same-site: Strict
+    path: /api/v1/auth

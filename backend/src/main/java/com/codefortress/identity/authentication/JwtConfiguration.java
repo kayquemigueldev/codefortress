@@ -1,5 +1,6 @@
 package com.codefortress.identity.authentication;
 
+import com.codefortress.identity.authentication.refresh.RefreshCookieProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +16,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 
 @Configuration
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({
+        JwtProperties.class,
+        RefreshCookieProperties.class
+})
 public class JwtConfiguration {
 
     @Bean

@@ -1,7 +1,8 @@
 package com.codefortress.shared.api;
 
-import com.codefortress.identity.registration.EmailAlreadyRegisteredException;
 import com.codefortress.identity.authentication.InvalidCredentialsException;
+import com.codefortress.identity.authentication.refresh.InvalidRefreshTokenException;
+import com.codefortress.identity.registration.EmailAlreadyRegisteredException;
 import com.codefortress.identity.user.CurrentUserUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -75,6 +76,19 @@ public class ApiExceptionHandler {
     ) {
         return new ApiErrorResponse(
                 "INVALID_CREDENTIALS",
+                exception.getMessage(),
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiErrorResponse handleInvalidRefreshToken(
+            InvalidRefreshTokenException exception
+    ) {
+        return new ApiErrorResponse(
+                "INVALID_REFRESH_TOKEN",
                 exception.getMessage(),
                 Map.of(),
                 Instant.now()

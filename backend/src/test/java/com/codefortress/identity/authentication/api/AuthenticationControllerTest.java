@@ -1,9 +1,9 @@
 package com.codefortress.identity.authentication.api;
 
-import com.codefortress.identity.registration.RegisterUserCommand;
-import com.codefortress.identity.registration.RegisterUserService;
 import com.codefortress.identity.authentication.RefreshSessionService;
 import com.codefortress.identity.authentication.refresh.InvalidRefreshTokenException;
+import com.codefortress.identity.registration.RegisterUserCommand;
+import com.codefortress.identity.registration.RegisterUserService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -80,18 +80,7 @@ class AuthenticationControllerTest {
     void shouldRefreshAuthenticatedSession() throws Exception {
         registerUser();
 
-        MvcResult loginResult = mockMvc.perform(
-                        post("/api/v1/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                          "email": "kayque@example.com",
-                                          "password": "correct-password"
-                                        }
-                                        """)
-                )
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult loginResult = loginUser();
 
         Cookie initialRefreshCookie =
                 extractRefreshCookie(loginResult);
@@ -133,28 +122,41 @@ class AuthenticationControllerTest {
     }
 
     @Test
+    void shouldRejectRefreshWithoutCookie() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/refresh"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code")
+                        .value("INVALID_REFRESH_TOKEN"))
+                .andExpect(jsonPath("$.message")
+                        .value("Invalid or expired refresh token"));
+    }
+
+    @Test
+    void shouldRejectInvalidRefreshToken() throws Exception {
+        Cookie invalidRefreshCookie = new Cookie(
+                "codefortress_refresh",
+                "invalid-refresh-token"
+        );
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .cookie(invalidRefreshCookie))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code")
+                        .value("INVALID_REFRESH_TOKEN"))
+                .andExpect(jsonPath("$.message")
+                        .value("Invalid or expired refresh token"));
+    }
+
+    @Test
     void shouldLogoutAndRevokeRefreshToken() throws Exception {
         registerUser();
 
-        MvcResult loginResult = mockMvc.perform(
-                        post("/api/v1/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                    {
-                                      "email": "kayque@example.com",
-                                      "password": "correct-password"
-                                    }
-                                    """)
-                )
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult loginResult = loginUser();
 
         Cookie refreshCookie = extractRefreshCookie(loginResult);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/logout")
-                                .cookie(refreshCookie)
-                )
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .cookie(refreshCookie))
                 .andExpect(status().isNoContent())
                 .andExpect(header().string(
                         HttpHeaders.SET_COOKIE,
@@ -214,6 +216,19 @@ class AuthenticationControllerTest {
                         .value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.fieldErrors.email").exists())
                 .andExpect(jsonPath("$.fieldErrors.password").exists());
+    }
+
+    private MvcResult loginUser() throws Exception {
+        return mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "kayque@example.com",
+                                  "password": "correct-password"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
     }
 
     private Cookie extractRefreshCookie(MvcResult result) {

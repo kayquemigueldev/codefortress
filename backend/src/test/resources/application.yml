@@ -18,3 +18,4 @@ security:
     secret: test-secret-that-is-longer-than-thirty-two-characters
     issuer: https://api.codefortress.local
     access-token-ttl: 15m
+    refresh-token-ttl: P30D

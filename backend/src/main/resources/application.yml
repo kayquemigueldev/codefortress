@@ -34,3 +34,4 @@ security:
     secret: ${JWT_SECRET}
     issuer: ${JWT_ISSUER:https://api.codefortress.local}
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:15m}
+    refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:P30D}

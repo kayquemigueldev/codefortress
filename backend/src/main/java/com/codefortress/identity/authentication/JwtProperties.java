@@ -8,7 +8,8 @@ import java.time.Duration;
 public record JwtProperties(
         String secret,
         String issuer,
-        Duration accessTokenTtl
+        Duration accessTokenTtl,
+        Duration refreshTokenTtl
 ) {
 
     public JwtProperties {
@@ -24,11 +25,21 @@ public record JwtProperties(
             );
         }
 
-        if (accessTokenTtl == null
-                || accessTokenTtl.isZero()
-                || accessTokenTtl.isNegative()) {
+        requirePositive(accessTokenTtl, "access-token-ttl");
+        requirePositive(refreshTokenTtl, "refresh-token-ttl");
+    }
+
+    private static void requirePositive(
+            Duration duration,
+            String propertyName
+    ) {
+        if (duration == null
+                || duration.isZero()
+                || duration.isNegative()) {
             throw new IllegalArgumentException(
-                    "security.jwt.access-token-ttl must be positive"
+                    "security.jwt."
+                            + propertyName
+                            + " must be positive"
             );
         }
     }

@@ -1,5 +1,7 @@
 package com.codefortress.identity.authentication;
 
+import com.codefortress.identity.authentication.refresh.IssuedRefreshToken;
+import com.codefortress.identity.authentication.refresh.RefreshTokenService;
 import com.codefortress.identity.user.User;
 import com.codefortress.identity.user.UserRepository;
 import com.codefortress.identity.user.UserStatus;
@@ -15,23 +17,26 @@ public class LoginService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccessTokenService accessTokenService;
+    private final RefreshTokenService refreshTokenService;
     private final String dummyPasswordHash;
 
     public LoginService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            AccessTokenService accessTokenService
+            AccessTokenService accessTokenService,
+            RefreshTokenService refreshTokenService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.accessTokenService = accessTokenService;
+        this.refreshTokenService = refreshTokenService;
 
         this.dummyPasswordHash = passwordEncoder.encode(
                 "codefortress-dummy-password"
         );
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public LoginResult login(LoginCommand command) {
         Optional<User> possibleUser = userRepository.findByEmail(
                 command.email()
@@ -61,11 +66,15 @@ public class LoginService {
                 user.getEmail()
         );
 
+        IssuedRefreshToken refreshToken =
+                refreshTokenService.issue(user.getId());
+
         return new LoginResult(
                 user.getId(),
                 user.getDisplayName(),
                 user.getEmail(),
-                accessToken
+                accessToken,
+                refreshToken
         );
     }
 }

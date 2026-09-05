@@ -6,6 +6,8 @@ import com.codefortress.analysis.engine.AnalysisContext;
 import com.codefortress.analysis.engine.RuleMatch;
 import com.codefortress.analysis.engine.ScannableFile;
 import com.codefortress.analysis.engine.SecurityRule;
+import com.codefortress.analysis.FindingCategory;
+import com.codefortress.analysis.engine.RuleMetadata;
 
 import java.util.Locale;
 import java.util.ArrayList;
@@ -17,11 +19,17 @@ import java.util.regex.Pattern;
 public class HardcodedSecretRule
         implements SecurityRule {
 
-    private static final String RULE_KEY =
-            "CF-SEC-001";
-
-    private static final String RULE_VERSION =
-            "1.0.0";
+    private static final RuleMetadata METADATA =
+            new RuleMetadata(
+                    "CF-SEC-001",
+                    "1.0.0",
+                    "Hardcoded Secret",
+                    FindingCategory.SECRETS,
+                    Severity.CRITICAL,
+                    "Detects passwords, tokens, API keys, and other secrets embedded directly in source code or configuration.",
+                    "Exposed secrets may allow unauthorized access to systems, services, or sensitive data.",
+                    "Move secrets to environment variables or a dedicated secret manager and rotate exposed credentials."
+            );
 
     private static final String REDACTED_VALUE =
             "********";
@@ -41,13 +49,8 @@ public class HardcodedSecretRule
 
 
     @Override
-    public String key() {
-        return RULE_KEY;
-    }
-
-    @Override
-    public String version() {
-        return RULE_VERSION;
+    public RuleMetadata metadata() {
+        return METADATA;
     }
 
     @Override
@@ -247,8 +250,8 @@ public class HardcodedSecretRule
             String redactedEvidence
     ) {
         return new RuleMatch(
-                RULE_KEY,
-                Severity.CRITICAL,
+                METADATA.key(),
+                METADATA.defaultSeverity(),
                 file.normalizedPath(),
                 lineNumber,
                 lineNumber,

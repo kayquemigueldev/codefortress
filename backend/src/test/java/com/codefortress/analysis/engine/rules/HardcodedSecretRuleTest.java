@@ -1,9 +1,11 @@
 package com.codefortress.analysis.engine.rules;
 
+import com.codefortress.analysis.FindingCategory;
 import com.codefortress.analysis.Severity;
 import com.codefortress.analysis.discovery.SourceFileCategory;
 import com.codefortress.analysis.engine.AnalysisContext;
 import com.codefortress.analysis.engine.RuleMatch;
+import com.codefortress.analysis.engine.RuleMetadata;
 import com.codefortress.analysis.engine.ScannableFile;
 import org.junit.jupiter.api.Test;
 
@@ -24,12 +26,30 @@ class HardcodedSecretRuleTest {
             );
 
     @Test
-    void shouldExposeRuleIdentity() {
-        assertThat(rule.key())
+    void shouldExposeRuleMetadata() {
+        RuleMetadata metadata =
+                rule.metadata();
+
+        assertThat(metadata.key())
                 .isEqualTo("CF-SEC-001");
 
-        assertThat(rule.version())
+        assertThat(metadata.version())
                 .isEqualTo("1.0.0");
+
+        assertThat(metadata.title())
+                .isEqualTo(
+                        "Hardcoded Secret"
+                );
+
+        assertThat(metadata.category())
+                .isEqualTo(
+                        FindingCategory.SECRETS
+                );
+
+        assertThat(metadata.defaultSeverity())
+                .isEqualTo(
+                        Severity.CRITICAL
+                );
     }
 
     @Test
@@ -77,7 +97,8 @@ class HardcodedSecretRuleTest {
         assertThat(matches)
                 .hasSize(1);
 
-        RuleMatch match = matches.getFirst();
+        RuleMatch match =
+                matches.getFirst();
 
         assertThat(match.ruleKey())
                 .isEqualTo("CF-SEC-001");
@@ -122,7 +143,8 @@ class HardcodedSecretRuleTest {
         assertThat(matches)
                 .hasSize(1);
 
-        RuleMatch match = matches.getFirst();
+        RuleMatch match =
+                matches.getFirst();
 
         assertThat(match.startLine())
                 .isEqualTo(2);
@@ -194,8 +216,13 @@ class HardcodedSecretRuleTest {
                 .hasSize(2);
 
         assertThat(matches)
-                .extracting(RuleMatch::startLine)
-                .containsExactly(2, 3);
+                .extracting(
+                        RuleMatch::startLine
+                )
+                .containsExactly(
+                        2,
+                        3
+                );
     }
 
     @Test

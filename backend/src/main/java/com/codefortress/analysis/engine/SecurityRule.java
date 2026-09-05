@@ -4,13 +4,9 @@ import java.util.List;
 
 public interface SecurityRule {
 
-    String key();
+    RuleMetadata metadata();
 
-    String version();
-
-    boolean supports(
-            ScannableFile file
-    );
+    boolean supports(ScannableFile file);
 
     List<RuleMatch> evaluate(
             ScannableFile file,

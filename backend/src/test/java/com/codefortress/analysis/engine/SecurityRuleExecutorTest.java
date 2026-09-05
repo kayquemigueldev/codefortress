@@ -2,6 +2,8 @@ package com.codefortress.analysis.engine;
 
 import com.codefortress.analysis.discovery.SourceFileCategory;
 import com.codefortress.analysis.engine.rules.HardcodedSecretRule;
+import com.codefortress.analysis.FindingCategory;
+import com.codefortress.analysis.Severity;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -75,13 +77,17 @@ class SecurityRuleExecutorTest {
                 new SecurityRule() {
 
                     @Override
-                    public String key() {
-                        return "CF-TEST-001";
-                    }
-
-                    @Override
-                    public String version() {
-                        return "1.0.0";
+                    public RuleMetadata metadata() {
+                        return new RuleMetadata(
+                                "CF-TEST-001",
+                                "1.0.0",
+                                "Unsupported Test Rule",
+                                FindingCategory.CODE,
+                                Severity.LOW,
+                                "Rule used to verify unsupported files are skipped.",
+                                "No production impact.",
+                                "No remediation is required."
+                        );
                     }
 
                     @Override

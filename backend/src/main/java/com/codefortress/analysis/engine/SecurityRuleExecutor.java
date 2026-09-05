@@ -27,10 +27,12 @@ public class SecurityRuleExecutor {
                 .sorted(
                         Comparator
                                 .comparing(
-                                        SecurityRule::key
+                                        (SecurityRule rule) ->
+                                                rule.metadata().key()
                                 )
                                 .thenComparing(
-                                        SecurityRule::version
+                                        rule ->
+                                                rule.metadata().version()
                                 )
                 )
                 .toList();

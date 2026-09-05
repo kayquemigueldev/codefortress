@@ -1,9 +1,12 @@
 package com.codefortress.analysis.engine;
 
+import com.codefortress.analysis.Severity;
+
 import java.util.Objects;
 
 public record RuleMatch(
         String ruleKey,
+        Severity severity,
         String filePath,
         int startLine,
         int endLine,
@@ -17,6 +20,11 @@ public record RuleMatch(
                     "ruleKey must not be blank"
             );
         }
+
+        Objects.requireNonNull(
+                severity,
+                "severity must not be null"
+        );
 
         if (filePath == null
                 || filePath.isBlank()) {

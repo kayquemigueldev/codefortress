@@ -1,5 +1,6 @@
 package com.codefortress.analysis.engine;
 
+import com.codefortress.analysis.Severity;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,6 +12,7 @@ class RuleMatchTest {
     void shouldCreateValidRuleMatch() {
         RuleMatch match = new RuleMatch(
                 "CF-SEC-001",
+                Severity.CRITICAL,
                 "src/main/java/Config.java",
                 12,
                 12,
@@ -19,6 +21,9 @@ class RuleMatchTest {
 
         assertThat(match.ruleKey())
                 .isEqualTo("CF-SEC-001");
+
+        assertThat(match.severity())
+                .isEqualTo(Severity.CRITICAL);
 
         assertThat(match.filePath())
                 .isEqualTo(
@@ -40,6 +45,7 @@ class RuleMatchTest {
         assertThatThrownBy(() ->
                 new RuleMatch(
                         "CF-SEC-001",
+                        Severity.CRITICAL,
                         "Config.java",
                         20,
                         10,
@@ -59,6 +65,7 @@ class RuleMatchTest {
         assertThatThrownBy(() ->
                 new RuleMatch(
                         "CF-SEC-001",
+                        Severity.CRITICAL,
                         "Config.java",
                         0,
                         1,
@@ -78,6 +85,7 @@ class RuleMatchTest {
         assertThatThrownBy(() ->
                 new RuleMatch(
                         " ",
+                        Severity.CRITICAL,
                         "Config.java",
                         1,
                         1,
@@ -89,6 +97,26 @@ class RuleMatchTest {
                 )
                 .hasMessage(
                         "ruleKey must not be blank"
+                );
+    }
+
+    @Test
+    void shouldRejectMissingSeverity() {
+        assertThatThrownBy(() ->
+                new RuleMatch(
+                        "CF-SEC-001",
+                        null,
+                        "Config.java",
+                        1,
+                        1,
+                        "redacted"
+                )
+        )
+                .isInstanceOf(
+                        NullPointerException.class
+                )
+                .hasMessage(
+                        "severity must not be null"
                 );
     }
 }

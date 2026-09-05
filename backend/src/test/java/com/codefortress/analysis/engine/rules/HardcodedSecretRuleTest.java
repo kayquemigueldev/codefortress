@@ -139,6 +139,42 @@ class HardcodedSecretRuleTest {
     }
 
     @Test
+    void shouldDetectDottedApiKeyInConfiguration() {
+        ScannableFile file = file(
+                "application.properties",
+                SourceFileCategory.CONFIGURATION,
+                """
+                api.key=secret-api-key
+                """
+        );
+
+        List<RuleMatch> matches =
+                rule.evaluate(file, context);
+
+        assertThat(matches)
+                .hasSize(1);
+
+        RuleMatch match =
+                matches.getFirst();
+
+        assertThat(match.severity())
+                .isEqualTo(
+                        Severity.CRITICAL
+                );
+
+        assertThat(match.redactedEvidence())
+                .contains("api.key");
+
+        assertThat(match.redactedEvidence())
+                .contains("********");
+
+        assertThat(match.redactedEvidence())
+                .doesNotContain(
+                        "secret-api-key"
+                );
+    }
+
+    @Test
     void shouldDetectMultipleHardcodedSecrets() {
         ScannableFile file = file(
                 "Config.java",

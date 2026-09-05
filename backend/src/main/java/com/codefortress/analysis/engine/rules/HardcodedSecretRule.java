@@ -7,6 +7,7 @@ import com.codefortress.analysis.engine.RuleMatch;
 import com.codefortress.analysis.engine.ScannableFile;
 import com.codefortress.analysis.engine.SecurityRule;
 
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,16 +39,6 @@ public class HardcodedSecretRule
                             + "\\2"
             );
 
-    private static final Pattern CONFIG_ASSIGNMENT =
-            Pattern.compile(
-                    "(?i)^\\s*"
-                            + "([a-z0-9_.-]*"
-                            + "(?:password|passwd|pwd|"
-                            + "api[_-]?key|apikey|"
-                            + "secret|token)"
-                            + "[a-z0-9_.-]*)"
-                            + "\\s*=\\s*(.+?)\\s*$"
-            );
 
     @Override
     public String key() {
@@ -170,25 +161,35 @@ public class HardcodedSecretRule
             int lineNumber,
             List<RuleMatch> matches
     ) {
-        Matcher matcher =
-                CONFIG_ASSIGNMENT.matcher(line);
+        int separatorIndex =
+                line.indexOf('=');
 
-        if (!matcher.matches()) {
+        if (separatorIndex < 0) {
             return;
         }
 
-        String secret = matcher.group(2);
+        String key =
+                line.substring(
+                        0,
+                        separatorIndex
+                ).trim();
 
-        if (shouldIgnore(secret)) {
+        String secret =
+                line.substring(
+                        separatorIndex + 1
+                ).trim();
+
+        if (!isSensitiveConfigurationKey(key)
+                || shouldIgnore(secret)) {
             return;
         }
 
         String redactedEvidence =
-                redact(
-                        line,
-                        matcher.start(2),
-                        matcher.end(2)
-                );
+                line.substring(
+                        0,
+                        separatorIndex + 1
+                )
+                        + REDACTED_VALUE;
 
         matches.add(
                 match(
@@ -197,6 +198,23 @@ public class HardcodedSecretRule
                         redactedEvidence
                 )
         );
+    }
+
+    private boolean isSensitiveConfigurationKey(
+            String key
+    ) {
+        String normalizedKey =
+                key.toLowerCase(Locale.ROOT)
+                        .replace(".", "")
+                        .replace("_", "")
+                        .replace("-", "");
+
+        return normalizedKey.contains("password")
+                || normalizedKey.contains("passwd")
+                || normalizedKey.contains("pwd")
+                || normalizedKey.contains("apikey")
+                || normalizedKey.contains("secret")
+                || normalizedKey.contains("token");
     }
 
     private boolean shouldIgnore(

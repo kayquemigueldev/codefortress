@@ -4,7 +4,7 @@ import com.codefortress.analysis.discovery.DiscoveredSourceFile;
 import com.codefortress.analysis.discovery.SourceFileDiscovery;
 import com.codefortress.analysis.discovery.SourceFileDiscoveryException;
 import com.codefortress.analysis.engine.AnalysisContext;
-import com.codefortress.analysis.engine.RuleMatch;
+import com.codefortress.analysis.engine.EvaluatedRuleMatch;
 import com.codefortress.analysis.engine.ScannableFile;
 import com.codefortress.analysis.engine.SecurityRuleExecutor;
 import com.codefortress.analysis.engine.SourceFileLoader;
@@ -83,7 +83,7 @@ public class AnalysisExecutionService {
                             RULE_SET_VERSION
                     );
 
-            List<RuleMatch> matches =
+            List<EvaluatedRuleMatch> matches =
                     ruleExecutor.execute(
                             scannableFiles,
                             context

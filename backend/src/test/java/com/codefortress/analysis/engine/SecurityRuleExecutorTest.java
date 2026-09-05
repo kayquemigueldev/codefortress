@@ -49,7 +49,7 @@ class SecurityRuleExecutorTest {
                         """
                 );
 
-        List<RuleMatch> matches =
+        List<EvaluatedRuleMatch> matches =
                 executor.execute(
                         List.of(
                                 sourceFile,
@@ -59,11 +59,9 @@ class SecurityRuleExecutorTest {
                 );
 
         assertThat(matches)
-                .hasSize(2);
-
-        assertThat(matches)
                 .extracting(
-                        RuleMatch::filePath
+                        evaluated ->
+                                evaluated.match().filePath()
                 )
                 .containsExactly(
                         "application.properties",
@@ -115,7 +113,7 @@ class SecurityRuleExecutorTest {
                         )
                 );
 
-        List<RuleMatch> matches =
+        List<EvaluatedRuleMatch> matches =
                 executor.execute(
                         List.of(
                                 file(
@@ -133,6 +131,99 @@ class SecurityRuleExecutorTest {
     }
 
     @Test
+    void shouldAssociateRuleMetadataWithMatch() {
+        SecurityRule rule =
+                new SecurityRule() {
+
+                    @Override
+                    public RuleMetadata metadata() {
+                        return new RuleMetadata(
+                                "CF-TEST-001",
+                                "1.0.0",
+                                "Test Rule",
+                                FindingCategory.CODE,
+                                Severity.HIGH,
+                                "Test description.",
+                                "Test impact.",
+                                "Test recommendation."
+                        );
+                    }
+
+                    @Override
+                    public boolean supports(
+                            ScannableFile file
+                    ) {
+                        return true;
+                    }
+
+                    @Override
+                    public List<RuleMatch> evaluate(
+                            ScannableFile file,
+                            AnalysisContext context
+                    ) {
+                        return List.of(
+                                new RuleMatch(
+                                        "CF-TEST-001",
+                                        Severity.HIGH,
+                                        file.normalizedPath(),
+                                        1,
+                                        1,
+                                        "test evidence"
+                                )
+                        );
+                    }
+                };
+
+        SecurityRuleExecutor executor =
+                new SecurityRuleExecutor(
+                        List.of(rule)
+                );
+
+        List<EvaluatedRuleMatch> matches =
+                executor.execute(
+                        List.of(
+                                new ScannableFile(
+                                        "Test.java",
+                                        SourceFileCategory.SOURCE_CODE,
+                                        "test",
+                                        1
+                                )
+                        ),
+                        context
+                );
+
+        assertThat(matches)
+                .hasSize(1);
+
+        EvaluatedRuleMatch evaluated =
+                matches.getFirst();
+
+        assertThat(
+                evaluated.metadata().key()
+        ).isEqualTo(
+                "CF-TEST-001"
+        );
+
+        assertThat(
+                evaluated.metadata().title()
+        ).isEqualTo(
+                "Test Rule"
+        );
+
+        assertThat(
+                evaluated.match().ruleKey()
+        ).isEqualTo(
+                "CF-TEST-001"
+        );
+
+        assertThat(
+                evaluated.match().severity()
+        ).isEqualTo(
+                Severity.HIGH
+        );
+    }
+
+    @Test
     void shouldReturnImmutableMatches() {
         SecurityRuleExecutor executor =
                 new SecurityRuleExecutor(
@@ -141,7 +232,7 @@ class SecurityRuleExecutorTest {
                         )
                 );
 
-        List<RuleMatch> matches =
+        List<EvaluatedRuleMatch> matches =
                 executor.execute(
                         List.of(
                                 file(

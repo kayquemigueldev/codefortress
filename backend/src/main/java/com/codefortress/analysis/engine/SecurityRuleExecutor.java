@@ -38,7 +38,7 @@ public class SecurityRuleExecutor {
                 .toList();
     }
 
-    public List<RuleMatch> execute(
+    public List<EvaluatedRuleMatch> execute(
             List<ScannableFile> files,
             AnalysisContext context
     ) {
@@ -67,7 +67,7 @@ public class SecurityRuleExecutor {
                         )
                         .toList();
 
-        List<RuleMatch> matches =
+        List<EvaluatedRuleMatch> matches =
                 new ArrayList<>();
 
         for (ScannableFile file
@@ -80,6 +80,12 @@ public class SecurityRuleExecutor {
                     continue;
                 }
 
+                RuleMetadata metadata =
+                        Objects.requireNonNull(
+                                rule.metadata(),
+                                "rule metadata must not be null"
+                        );
+
                 List<RuleMatch> ruleMatches =
                         Objects.requireNonNull(
                                 rule.evaluate(
@@ -89,9 +95,19 @@ public class SecurityRuleExecutor {
                                 "rule matches must not be null"
                         );
 
-                matches.addAll(
-                        ruleMatches
-                );
+                for (RuleMatch ruleMatch
+                        : ruleMatches) {
+
+                    matches.add(
+                            new EvaluatedRuleMatch(
+                                    metadata,
+                                    Objects.requireNonNull(
+                                            ruleMatch,
+                                            "rule match must not be null"
+                                    )
+                            )
+                    );
+                }
             }
         }
 

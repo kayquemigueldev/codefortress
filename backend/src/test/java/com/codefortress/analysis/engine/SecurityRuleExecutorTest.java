@@ -1,4 +1,199 @@
 package com.codefortress.analysis.engine;
 
-public class SecurityRuleExecutorTest {
+import com.codefortress.analysis.discovery.SourceFileCategory;
+import com.codefortress.analysis.engine.rules.HardcodedSecretRule;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class SecurityRuleExecutorTest {
+
+    private final AnalysisContext context =
+            new AnalysisContext(
+                    UUID.randomUUID(),
+                    "ruleset-java-v1"
+            );
+
+    @Test
+    void shouldExecuteRulesAcrossFiles() {
+        SecurityRuleExecutor executor =
+                new SecurityRuleExecutor(
+                        List.of(
+                                new HardcodedSecretRule()
+                        )
+                );
+
+        ScannableFile sourceFile =
+                file(
+                        "src/main/java/Config.java",
+                        SourceFileCategory.SOURCE_CODE,
+                        """
+                        class Config {
+                            String password = "secret-password";
+                        }
+                        """
+                );
+
+        ScannableFile configurationFile =
+                file(
+                        "application.properties",
+                        SourceFileCategory.CONFIGURATION,
+                        """
+                        api.key=secret-api-key
+                        """
+                );
+
+        List<RuleMatch> matches =
+                executor.execute(
+                        List.of(
+                                sourceFile,
+                                configurationFile
+                        ),
+                        context
+                );
+
+        assertThat(matches)
+                .hasSize(2);
+
+        assertThat(matches)
+                .extracting(
+                        RuleMatch::filePath
+                )
+                .containsExactly(
+                        "application.properties",
+                        "src/main/java/Config.java"
+                );
+    }
+
+    @Test
+    void shouldSkipUnsupportedRule() {
+        SecurityRule unsupportedRule =
+                new SecurityRule() {
+
+                    @Override
+                    public String key() {
+                        return "CF-TEST-001";
+                    }
+
+                    @Override
+                    public String version() {
+                        return "1.0.0";
+                    }
+
+                    @Override
+                    public boolean supports(
+                            ScannableFile file
+                    ) {
+                        return false;
+                    }
+
+                    @Override
+                    public List<RuleMatch> evaluate(
+                            ScannableFile file,
+                            AnalysisContext context
+                    ) {
+                        throw new AssertionError(
+                                "evaluate must not be called"
+                        );
+                    }
+                };
+
+        SecurityRuleExecutor executor =
+                new SecurityRuleExecutor(
+                        List.of(
+                                unsupportedRule
+                        )
+                );
+
+        List<RuleMatch> matches =
+                executor.execute(
+                        List.of(
+                                file(
+                                        "pom.xml",
+                                        SourceFileCategory
+                                                .DEPENDENCY_MANIFEST,
+                                        "<project />"
+                                )
+                        ),
+                        context
+                );
+
+        assertThat(matches)
+                .isEmpty();
+    }
+
+    @Test
+    void shouldReturnImmutableMatches() {
+        SecurityRuleExecutor executor =
+                new SecurityRuleExecutor(
+                        List.of(
+                                new HardcodedSecretRule()
+                        )
+                );
+
+        List<RuleMatch> matches =
+                executor.execute(
+                        List.of(
+                                file(
+                                        "Config.java",
+                                        SourceFileCategory.SOURCE_CODE,
+                                        """
+                                        class Config {
+                                            String password = "secret-password";
+                                        }
+                                        """
+                                )
+                        ),
+                        context
+                );
+
+        assertThatThrownBy(() ->
+                matches.add(null)
+        )
+                .isInstanceOf(
+                        UnsupportedOperationException.class
+                );
+    }
+
+    @Test
+    void shouldRejectMissingContext() {
+        SecurityRuleExecutor executor =
+                new SecurityRuleExecutor(
+                        List.of(
+                                new HardcodedSecretRule()
+                        )
+                );
+
+        assertThatThrownBy(() ->
+                executor.execute(
+                        List.of(),
+                        null
+                )
+        )
+                .isInstanceOf(
+                        NullPointerException.class
+                )
+                .hasMessage(
+                        "context must not be null"
+                );
+    }
+
+    private ScannableFile file(
+            String path,
+            SourceFileCategory category,
+            String content
+    ) {
+        return new ScannableFile(
+                path,
+                category,
+                content,
+                Math.toIntExact(
+                        content.lines().count()
+                )
+        );
+    }
 }

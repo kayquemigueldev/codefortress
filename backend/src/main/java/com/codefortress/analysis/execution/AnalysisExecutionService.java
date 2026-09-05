@@ -3,6 +3,12 @@ package com.codefortress.analysis.execution;
 import com.codefortress.analysis.discovery.DiscoveredSourceFile;
 import com.codefortress.analysis.discovery.SourceFileDiscovery;
 import com.codefortress.analysis.discovery.SourceFileDiscoveryException;
+import com.codefortress.analysis.engine.AnalysisContext;
+import com.codefortress.analysis.engine.RuleMatch;
+import com.codefortress.analysis.engine.ScannableFile;
+import com.codefortress.analysis.engine.SecurityRuleExecutor;
+import com.codefortress.analysis.engine.SourceFileLoader;
+import com.codefortress.analysis.engine.SourceFileLoadingException;
 import com.codefortress.analysis.extraction.ExtractedSourceArchive;
 import com.codefortress.analysis.extraction.SourceArchiveExtractionException;
 import com.codefortress.analysis.extraction.SourceArchiveExtractor;
@@ -20,10 +26,15 @@ public class AnalysisExecutionService {
 
     private static final int INITIAL_SECURITY_SCORE = 100;
 
+    private static final String RULE_SET_VERSION =
+            "ruleset-java-v1";
+
     private final AnalysisLifecycleService lifecycleService;
     private final SourceArchiveExtractor archiveExtractor;
     private final SourceFileDiscovery fileDiscovery;
     private final SourceMetricsCalculator metricsCalculator;
+    private final SourceFileLoader fileLoader;
+    private final SecurityRuleExecutor ruleExecutor;
     private final LocalSourceArchiveStorage archiveStorage;
 
     public AnalysisExecutionService(
@@ -31,12 +42,16 @@ public class AnalysisExecutionService {
             SourceArchiveExtractor archiveExtractor,
             SourceFileDiscovery fileDiscovery,
             SourceMetricsCalculator metricsCalculator,
+            SourceFileLoader fileLoader,
+            SecurityRuleExecutor ruleExecutor,
             LocalSourceArchiveStorage archiveStorage
     ) {
         this.lifecycleService = lifecycleService;
         this.archiveExtractor = archiveExtractor;
         this.fileDiscovery = fileDiscovery;
         this.metricsCalculator = metricsCalculator;
+        this.fileLoader = fileLoader;
+        this.ruleExecutor = ruleExecutor;
         this.archiveStorage = archiveStorage;
     }
 
@@ -57,6 +72,23 @@ public class AnalysisExecutionService {
                             sourceFiles
                     );
 
+            List<ScannableFile> scannableFiles =
+                    sourceFiles.stream()
+                            .map(fileLoader::load)
+                            .toList();
+
+            AnalysisContext context =
+                    new AnalysisContext(
+                            analysisId,
+                            RULE_SET_VERSION
+                    );
+
+            List<RuleMatch> matches =
+                    ruleExecutor.execute(
+                            scannableFiles,
+                            context
+                    );
+
             removeSourceArtifacts(analysisId);
 
             return lifecycleService.complete(
@@ -64,7 +96,7 @@ public class AnalysisExecutionService {
                     INITIAL_SECURITY_SCORE,
                     metrics.filesScanned(),
                     metrics.linesScanned(),
-                    0
+                    matches.size()
             );
         } catch (RuntimeException exception) {
             removeSourceArtifactsQuietly(analysisId);
@@ -85,9 +117,7 @@ public class AnalysisExecutionService {
         archiveStorage.delete(analysisId);
     }
 
-    private void removeSourceArtifactsQuietly(
-            UUID analysisId
-    ) {
+    private void removeSourceArtifactsQuietly(UUID analysisId) {
         try {
             archiveExtractor.deleteWorkspace(analysisId);
         } catch (RuntimeException ignored) {
@@ -103,8 +133,7 @@ public class AnalysisExecutionService {
             RuntimeException exception
     ) {
         if (exception
-                instanceof SourceArchiveExtractionException
-                extractionException) {
+                instanceof SourceArchiveExtractionException extractionException) {
             return new FailureDescription(
                     extractionException.getCode(),
                     extractionException.getMessage()
@@ -112,8 +141,7 @@ public class AnalysisExecutionService {
         }
 
         if (exception
-                instanceof SourceFileDiscoveryException
-                discoveryException) {
+                instanceof SourceFileDiscoveryException discoveryException) {
             return new FailureDescription(
                     discoveryException.getCode(),
                     discoveryException.getMessage()
@@ -121,8 +149,7 @@ public class AnalysisExecutionService {
         }
 
         if (exception
-                instanceof SourceMetricsCalculationException
-                metricsException) {
+                instanceof SourceMetricsCalculationException metricsException) {
             return new FailureDescription(
                     metricsException.getCode(),
                     metricsException.getMessage()
@@ -130,8 +157,15 @@ public class AnalysisExecutionService {
         }
 
         if (exception
-                instanceof SourceArchiveStorageException
-                storageException) {
+                instanceof SourceFileLoadingException loadingException) {
+            return new FailureDescription(
+                    loadingException.getCode(),
+                    loadingException.getMessage()
+            );
+        }
+
+        if (exception
+                instanceof SourceArchiveStorageException storageException) {
             return new FailureDescription(
                     storageException.getCode(),
                     storageException.getMessage()

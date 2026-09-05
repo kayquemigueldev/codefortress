@@ -120,6 +120,56 @@ class AnalysisExecutionServiceTest {
     }
 
     @Test
+    void shouldCountDetectedSecurityFindings()
+            throws IOException {
+        User owner = createUser();
+        Project project = createProject(owner);
+
+        Map<String, String> entries =
+                new LinkedHashMap<>();
+
+        entries.put(
+                "src/Config.java",
+                """
+                class Config {
+                    String password = "super-secret-password";
+                }
+                """
+        );
+
+        UploadedAnalysis uploaded =
+                uploadAnalysisService.upload(
+                        owner.getId(),
+                        project.getId(),
+                        multipartFile(
+                                createZip(entries)
+                        )
+                );
+
+        AnalysisState result =
+                executionService.execute(
+                        uploaded.id()
+                );
+
+        assertThat(result.status())
+                .isEqualTo(
+                        AnalysisStatus.COMPLETED
+                );
+
+        assertThat(result.filesScanned())
+                .isEqualTo(1);
+
+        assertThat(result.linesScanned())
+                .isEqualTo(3L);
+
+        assertThat(result.findingsCount())
+                .isEqualTo(1);
+
+        assertThat(result.securityScore())
+                .isEqualTo((short) 100);
+    }
+
+    @Test
     void shouldFailAnalysisWhenArchiveHasNoFiles()
             throws IOException {
         User owner = createUser();

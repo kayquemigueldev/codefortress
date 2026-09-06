@@ -1,4 +1,5 @@
 import { apiRequest } from '../../lib/api/api-client'
+let refreshPromise: Promise<LoginResponse> | null = null
 
 import type {
     AuthUser,
@@ -24,12 +25,18 @@ export function login(
 }
 
 export function refreshSession() {
-    return apiRequest<LoginResponse>(
-        '/auth/refresh',
-        {
-            method: 'POST',
-        },
-    )
+    if (!refreshPromise) {
+        refreshPromise = apiRequest<LoginResponse>(
+            '/auth/refresh',
+            {
+                method: 'POST',
+            },
+        ).finally(() => {
+            refreshPromise = null
+        })
+    }
+
+    return refreshPromise
 }
 
 export function logout() {

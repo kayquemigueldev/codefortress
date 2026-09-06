@@ -1,41 +1,107 @@
-import { Route, Routes } from 'react-router'
+import {
+    Route,
+    Routes,
+} from 'react-router'
+
+import { ProtectedRoute } from '../features/auth/ProtectedRoute'
+import { PublicOnlyRoute } from '../features/auth/PublicOnlyRoute'
+import { LoginPage } from '../features/auth/LoginPage'
+import { DashboardPage } from '../features/dashboard/DashboardPage'
+
+import '../styles/auth.css'
+
+function HomePage() {
+    return (
+        <main className="foundation">
+            <p className="foundation__eyebrow">
+                CodeFortress
+            </p>
+
+            <h1>
+                Security analysis starts
+                here.
+            </h1>
+
+            <p>
+                Frontend foundation is
+                running.
+            </p>
+        </main>
+    )
+}
+
+function RegisterPlaceholder() {
+    return (
+        <main className="dashboard-preview">
+            <div>
+                <p className="auth-eyebrow">
+                    CodeFortress
+                </p>
+
+                <h1>
+                    Registration is next.
+                </h1>
+            </div>
+        </main>
+    )
+}
+
+function NotFoundPage() {
+    return (
+        <main className="foundation">
+            <p className="foundation__eyebrow">
+                404
+            </p>
+
+            <h1>
+                Page not found.
+            </h1>
+        </main>
+    )
+}
 
 export function AppRouter() {
     return (
         <Routes>
             <Route
                 path="/"
-                element={
-                    <main className="foundation">
-            <span className="foundation__eyebrow">
-              CodeFortress
-            </span>
-
-                        <h1>
-                            Security analysis starts here.
-                        </h1>
-
-                        <p>
-                            React foundation is ready.
-                            Authentication comes next.
-                        </p>
-                    </main>
-                }
+                element={<HomePage />}
             />
 
             <Route
-                path="*"
                 element={
-                    <main className="foundation">
-            <span className="foundation__eyebrow">
-              404
-            </span>
-
-                        <h1>
-                            Page not found.
-                        </h1>
-                    </main>
+                    <PublicOnlyRoute />
                 }
+            >
+                <Route
+                    path="/login"
+                    element={<LoginPage />}
+                />
+
+                <Route
+                    path="/register"
+                    element={
+                        <RegisterPlaceholder />
+                    }
+                />
+            </Route>
+
+            <Route
+                element={
+                    <ProtectedRoute />
+                }
+            >
+                <Route
+                    path="/app/dashboard"
+                    element={
+                        <DashboardPage />
+                    }
+                />
+            </Route>
+
+            <Route
+                path="*"
+                element={<NotFoundPage />}
             />
         </Routes>
     )

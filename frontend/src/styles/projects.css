@@ -461,6 +461,7 @@ max-width: 600px
 }
 
 .project-tab {
+    text-decoration: none;
     position: relative;
     padding: 0 0 14px;
     color: #65717f;

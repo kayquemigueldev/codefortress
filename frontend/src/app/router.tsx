@@ -12,7 +12,9 @@ import { ProjectsPage } from '../features/projects/ProjectsPage'
 import { NewProjectPage } from '../features/projects/NewProjectPage'
 import { ProjectDetailsPage } from '../features/projects/ProjectDetailsPage'
 import { AppShell } from '../components/layout/AppShell'
+import { ProjectAnalysesPage } from '../features/analyses/ProjectAnalysesPage'
 
+import '../styles/analyses.css'
 import '../styles/app-shell.css'
 import '../styles/projects.css'
 import '../styles/auth.css'
@@ -109,6 +111,11 @@ export function AppRouter() {
                         element={
                             <ProjectDetailsPage />
                         }
+                    />
+
+                    <Route
+                        path="/app/projects/:projectId/analyses"
+                        element={<ProjectAnalysesPage />}
                     />
                 </Route>
             </Route>

@@ -161,9 +161,14 @@ export function ProjectDetailsPage() {
             Overview
           </span>
 
-                    <span className="project-tab">
-            Analyses
-          </span>
+                    <Link
+                        className="project-tab"
+                        to={
+                            `/app/projects/${project.id}/analyses`
+                        }
+                    >
+                        Analyses
+                    </Link>
 
                     <span className="project-tab">
             Findings

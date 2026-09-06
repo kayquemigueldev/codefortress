@@ -1,0 +1,355 @@
+.findings-page {
+    min-height: 100%;
+    padding: 56px 32px 72px;
+    color: #f4f7fb;
+}
+
+.findings-container {
+    width: min(1080px, 100%);
+    margin: 0 auto;
+}
+
+.findings-header {
+    margin-bottom: 30px;
+}
+
+.findings-header h1,
+.findings-container > h1 {
+    margin: 0;
+    color: #f4f7fb;
+    font-size: clamp(
+            42px,
+            6vw,
+            62px
+    );
+    line-height: 1;
+    letter-spacing: -0.05em;
+}
+
+.findings-description {
+    max-width: 680px;
+    margin: 17px 0 0;
+    color: #82909d;
+    line-height: 1.7;
+}
+
+.findings-summary {
+    display: grid;
+    grid-template-columns:
+    repeat(5, 1fr);
+    gap: 1px;
+    overflow: hidden;
+    margin-bottom: 30px;
+    border: 1px solid #202832;
+    border-radius: 12px;
+    background: #202832;
+}
+
+.findings-summary__item {
+    display: grid;
+    gap: 9px;
+    background: #0d1218;
+    padding: 18px;
+}
+
+.findings-summary__item span {
+    color: #687583;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.findings-summary__value {
+    color: #dce4ec;
+    font-size: 25px;
+}
+
+.findings-summary__value--critical {
+    color: #e47777;
+}
+
+.findings-summary__value--high {
+    color: #dc9665;
+}
+
+.findings-summary__value--medium {
+    color: #d5b561;
+}
+
+.findings-summary__value--low {
+    color: #7fc999;
+}
+
+.findings-list {
+    display: grid;
+    gap: 18px;
+}
+
+.finding-card {
+    overflow: hidden;
+    border: 1px solid #202832;
+    border-radius: 15px;
+    background: #0d1218;
+}
+
+.finding-card__header {
+    padding: 24px;
+}
+
+.finding-card__badges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.finding-severity,
+.finding-status {
+    border-radius: 999px;
+    padding: 5px 8px;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.finding-severity--critical {
+    border: 1px solid
+    rgb(212 93 93 / 35%);
+    background:
+            rgb(212 93 93 / 8%);
+    color: #e67e7e;
+}
+
+.finding-severity--high {
+    border: 1px solid
+    rgb(213 137 80 / 35%);
+    background:
+            rgb(213 137 80 / 8%);
+    color: #df9c6d;
+}
+
+.finding-severity--medium {
+    border: 1px solid
+    rgb(204 170 83 / 35%);
+    background:
+            rgb(204 170 83 / 8%);
+    color: #d8b866;
+}
+
+.finding-severity--low {
+    border: 1px solid
+    rgb(104 195 136 / 30%);
+    background:
+            rgb(104 195 136 / 7%);
+    color: #7bd49a;
+}
+
+.finding-status {
+    border: 1px solid #303a45;
+    background: #111820;
+    color: #7e8b98;
+}
+
+.finding-card h2 {
+    margin: 0;
+    color: #edf2f7;
+    font-size: 22px;
+    letter-spacing: -0.03em;
+}
+
+.finding-rule {
+    margin: 8px 0 0;
+    color: #65727f;
+    font-family:
+            "SFMono-Regular",
+            Consolas,
+            monospace;
+    font-size: 10px;
+}
+
+.finding-location {
+    display: grid;
+    grid-template-columns:
+    minmax(0, 1fr) auto;
+    gap: 30px;
+    border-top: 1px solid #1d252e;
+    border-bottom: 1px solid #1d252e;
+    background: #0a0f14;
+    padding: 17px 24px;
+}
+
+.finding-location > div {
+    display: grid;
+    gap: 6px;
+}
+
+.finding-location span {
+    color: #5e6b78;
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.finding-location strong {
+    overflow-wrap: anywhere;
+    color: #9da9b5;
+    font-family:
+            "SFMono-Regular",
+            Consolas,
+            monospace;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.finding-code {
+    margin: 24px;
+    overflow: hidden;
+    border: 1px solid #252f39;
+    border-radius: 10px;
+    background: #070b0f;
+}
+
+.finding-code__header {
+    border-bottom: 1px solid #202832;
+    padding: 10px 14px;
+    color: #65727f;
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.finding-code pre {
+    overflow-x: auto;
+    margin: 0;
+    padding: 16px;
+}
+
+.finding-code code {
+    color: #a9d7b8;
+    font-family:
+            "SFMono-Regular",
+            Consolas,
+            monospace;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+.finding-details {
+    display: grid;
+    gap: 0;
+    padding: 0 24px 24px;
+}
+
+.finding-detail {
+    display: grid;
+    grid-template-columns:
+    150px minmax(0, 1fr);
+    gap: 30px;
+    border-top: 1px solid #1d252e;
+    padding: 18px 0;
+}
+
+.finding-detail span {
+    color: #65727f;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.finding-detail p {
+    margin: 0;
+    color: #a4afba;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.finding-card__footer {
+    display: grid;
+    gap: 7px;
+    border-top: 1px solid #1d252e;
+    background: #0a0f14;
+    padding: 14px 24px;
+}
+
+.finding-card__footer span {
+    color: #566371;
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.finding-card__footer code {
+    overflow-wrap: anywhere;
+    color: #687582;
+    font-size: 9px;
+}
+
+.findings-empty {
+    display: grid;
+    min-height: 280px;
+    place-items: center;
+    align-content: center;
+    border: 1px solid #202832;
+    border-radius: 14px;
+    background: #0d1218;
+    padding: 30px;
+    text-align: center;
+}
+
+.findings-empty__mark {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    margin-bottom: 18px;
+    border: 1px solid
+    rgb(104 195 136 / 30%);
+    border-radius: 50%;
+    color: #7bd49a;
+}
+
+.findings-empty h2 {
+    margin: 0;
+    color: #e6edf3;
+}
+
+.findings-empty p {
+    margin: 10px 0 0;
+    color: #75828f;
+    font-size: 12px;
+}
+
+@media (
+max-width: 760px
+) {
+    .findings-page {
+        padding:
+                42px 20px 90px;
+    }
+
+    .findings-summary {
+        grid-template-columns:
+      repeat(2, 1fr);
+    }
+
+    .finding-detail {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+@media (
+max-width: 480px
+) {
+    .findings-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .finding-location {
+        grid-template-columns: 1fr;
+    }
+}

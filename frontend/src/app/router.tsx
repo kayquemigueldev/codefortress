@@ -13,7 +13,9 @@ import { NewProjectPage } from '../features/projects/NewProjectPage'
 import { ProjectDetailsPage } from '../features/projects/ProjectDetailsPage'
 import { AppShell } from '../components/layout/AppShell'
 import { ProjectAnalysesPage } from '../features/analyses/ProjectAnalysesPage'
+import { AnalysisFindingsPage } from '../features/findings/AnalysisFindingsPage'
 
+import '../styles/findings.css'
 import '../styles/analyses.css'
 import '../styles/app-shell.css'
 import '../styles/projects.css'
@@ -117,6 +119,12 @@ export function AppRouter() {
                         path="/app/projects/:projectId/analyses"
                         element={<ProjectAnalysesPage />}
                     />
+
+                    <Route
+                        path="/app/projects/:projectId/analyses/:analysisId/findings"
+                        element={<AnalysisFindingsPage />}
+                    />
+
                 </Route>
             </Route>
 

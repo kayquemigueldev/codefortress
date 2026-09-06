@@ -11,7 +11,9 @@ import { RegisterPage } from '../features/auth/RegisterPage'
 import { ProjectsPage } from '../features/projects/ProjectsPage'
 import { NewProjectPage } from '../features/projects/NewProjectPage'
 import { ProjectDetailsPage } from '../features/projects/ProjectDetailsPage'
+import { AppShell } from '../components/layout/AppShell'
 
+import '../styles/app-shell.css'
 import '../styles/projects.css'
 import '../styles/auth.css'
 
@@ -76,31 +78,39 @@ export function AppRouter() {
             </Route>
 
             <Route
-                element={
-                    <ProtectedRoute />
-                }
+                element={<ProtectedRoute />}
             >
                 <Route
-                    path="/app/projects"
-                    element={<ProjectsPage />}
-                />
+                    element={<AppShell />}
+                >
+                    <Route
+                        path="/app/dashboard"
+                        element={
+                            <DashboardPage />
+                        }
+                    />
 
-                <Route
-                    path="/app/projects/new"
-                    element={<NewProjectPage />}
-                />
+                    <Route
+                        path="/app/projects"
+                        element={
+                            <ProjectsPage />
+                        }
+                    />
 
-                <Route
-                    path="/app/projects/:projectId"
-                    element={<ProjectDetailsPage />}
-                />
+                    <Route
+                        path="/app/projects/new"
+                        element={
+                            <NewProjectPage />
+                        }
+                    />
 
-                <Route
-                    path="/app/dashboard"
-                    element={
-                        <DashboardPage />
-                    }
-                />
+                    <Route
+                        path="/app/projects/:projectId"
+                        element={
+                            <ProjectDetailsPage />
+                        }
+                    />
+                </Route>
             </Route>
 
             <Route

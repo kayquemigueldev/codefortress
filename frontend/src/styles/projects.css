@@ -1,7 +1,7 @@
 .projects-page {
-    min-height: 100vh;
-    background: #080b10;
-    padding: 72px 32px;
+    min-height: 100%;
+    background: transparent;
+    padding: 56px 32px 72px;
     color: #f4f7fb;
 }
 

@@ -17,6 +17,7 @@ import com.codefortress.analysis.lifecycle.AnalysisState;
 import com.codefortress.analysis.upload.LocalSourceArchiveStorage;
 import com.codefortress.analysis.upload.SourceArchiveStorageException;
 import com.codefortress.analysis.finding.FindingPersistenceService;
+import com.codefortress.analysis.scoring.SecurityScoreCalculator;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,8 +25,6 @@ import java.util.UUID;
 
 @Service
 public class AnalysisExecutionService {
-
-    private static final int INITIAL_SECURITY_SCORE = 100;
 
     private static final String RULE_SET_VERSION =
             "ruleset-java-v1";
@@ -38,6 +37,7 @@ public class AnalysisExecutionService {
     private final SecurityRuleExecutor ruleExecutor;
     private final FindingPersistenceService findingPersistenceService;
     private final LocalSourceArchiveStorage archiveStorage;
+    private final SecurityScoreCalculator scoreCalculator;
 
     public AnalysisExecutionService(
             AnalysisLifecycleService lifecycleService,
@@ -46,6 +46,7 @@ public class AnalysisExecutionService {
             SourceMetricsCalculator metricsCalculator,
             SourceFileLoader fileLoader,
             SecurityRuleExecutor ruleExecutor,
+            SecurityScoreCalculator scoreCalculator,
             FindingPersistenceService findingPersistenceService,
             LocalSourceArchiveStorage archiveStorage
     ) {
@@ -57,6 +58,7 @@ public class AnalysisExecutionService {
         this.ruleExecutor = ruleExecutor;
         this.findingPersistenceService = findingPersistenceService;
         this.archiveStorage = archiveStorage;
+        this.scoreCalculator = scoreCalculator;
     }
 
     public AnalysisState execute(UUID analysisId) {
@@ -93,6 +95,11 @@ public class AnalysisExecutionService {
                             context
                     );
 
+            int securityScore =
+                    scoreCalculator.calculate(
+                            matches
+                    );
+
             int findingsCount =
                     findingPersistenceService.persist(
                             analysisId,
@@ -103,7 +110,7 @@ public class AnalysisExecutionService {
 
             return lifecycleService.complete(
                     analysisId,
-                    INITIAL_SECURITY_SCORE,
+                    securityScore,
                     metrics.filesScanned(),
                     metrics.linesScanned(),
                     findingsCount

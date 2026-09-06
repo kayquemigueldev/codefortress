@@ -174,7 +174,7 @@ class AnalysisExecutionServiceTest {
                 .isEqualTo(1);
 
         assertThat(result.securityScore())
-                .isEqualTo((short) 100);
+                .isEqualTo((short) 49);
         Finding finding =
                 findingRepository
                         .findAllByAnalysis_IdOrderByCreatedAtAsc(

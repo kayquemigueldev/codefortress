@@ -10,6 +10,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
 import { ProjectsPage } from '../features/projects/ProjectsPage'
 import { NewProjectPage } from '../features/projects/NewProjectPage'
+import { ProjectDetailsPage } from '../features/projects/ProjectDetailsPage'
 
 import '../styles/projects.css'
 import '../styles/auth.css'
@@ -87,6 +88,11 @@ export function AppRouter() {
                 <Route
                     path="/app/projects/new"
                     element={<NewProjectPage />}
+                />
+
+                <Route
+                    path="/app/projects/:projectId"
+                    element={<ProjectDetailsPage />}
                 />
 
                 <Route

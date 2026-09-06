@@ -594,3 +594,216 @@ max-width: 760px
         overflow-x: auto;
     }
 }
+
+.project-security-overview {
+    margin-bottom: 32px;
+}
+
+.project-security-overview__heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 17px;
+}
+
+.project-security-overview__heading h2 {
+    margin: 0;
+    color: #eaf0f6;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+}
+
+.project-security-link {
+    color: #81909d;
+    font-size: 11px;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.project-security-link:hover {
+    color: #a9d9b9;
+}
+
+.project-security-state {
+    border: 1px solid #202832;
+    border-radius: 13px;
+    background: #0d1218;
+    padding: 28px;
+    color: #778592;
+    font-size: 12px;
+}
+
+.project-security-empty {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    border: 1px solid #202832;
+    border-radius: 14px;
+    background: #0d1218;
+    padding: 24px;
+}
+
+.project-security-empty h3 {
+    margin: 0;
+    color: #e3eaf1;
+    font-size: 16px;
+}
+
+.project-security-empty p {
+    max-width: 560px;
+    margin: 8px 0 0;
+    color: #74818e;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.project-security-card {
+    overflow: hidden;
+    border: 1px solid #24303a;
+    border-radius: 14px;
+    background: #0d1218;
+}
+
+.project-security-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 21px 22px;
+}
+
+.project-security-analysis-number {
+    margin: 0 0 6px;
+    color: #65727f;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.project-security-card__top h3 {
+    margin: 0;
+    color: #e8eef4;
+    font-size: 15px;
+}
+
+.project-security-status {
+    border: 1px solid #303a44;
+    border-radius: 999px;
+    padding: 5px 8px;
+    color: #84919e;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+
+.project-security-status--completed {
+    border-color:
+            rgb(104 195 136 / 28%);
+    background:
+            rgb(104 195 136 / 7%);
+    color: #7bd49a;
+}
+
+.project-security-status--queued,
+.project-security-status--running {
+    border-color:
+            rgb(205 170 85 / 28%);
+    background:
+            rgb(205 170 85 / 7%);
+    color: #d6b667;
+}
+
+.project-security-status--failed {
+    border-color:
+            rgb(207 93 93 / 30%);
+    background:
+            rgb(207 93 93 / 7%);
+    color: #df7b7b;
+}
+
+.project-security-metrics {
+    display: grid;
+    grid-template-columns:
+    repeat(4, 1fr);
+    gap: 1px;
+    border-top: 1px solid #1d252e;
+    border-bottom: 1px solid #1d252e;
+    background: #1d252e;
+}
+
+.project-security-metrics > div {
+    display: grid;
+    gap: 9px;
+    background: #0a0f14;
+    padding: 17px 20px;
+}
+
+.project-security-metrics span {
+    color: #61707d;
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.project-security-metrics strong {
+    color: #cbd4dd;
+    font-size: 20px;
+}
+
+.project-security-metrics
+.project-security-score {
+    color: #80d89f;
+    font-size: 28px;
+}
+
+.project-security-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 14px 22px;
+}
+
+.project-security-card__footer span {
+    color: #5d6a77;
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.project-security-card__footer a {
+    color: #8ddcab;
+    font-size: 11px;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.project-security-card__footer a:hover {
+    text-decoration: underline;
+}
+
+@media (
+max-width: 760px
+) {
+    .project-security-overview__heading,
+    .project-security-empty {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .project-security-metrics {
+        grid-template-columns:
+      repeat(2, 1fr);
+    }
+}
+
+@media (
+max-width: 460px
+) {
+    .project-security-metrics {
+        grid-template-columns: 1fr;
+    }
+}

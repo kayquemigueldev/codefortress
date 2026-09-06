@@ -2,58 +2,80 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import {
     Link,
-    useLocation,
     useNavigate,
 } from 'react-router'
-import {
-    useForm,
-} from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { ApiError } from '../../lib/api/api-error'
 import { useAuth } from '../../lib/auth/useAuth'
 
-const loginSchema = z.object({
-    email: z
-        .string()
-        .trim()
-        .min(
-            1,
-            'Enter your email.',
-        )
-        .email(
-            'Enter a valid email.',
-        )
-        .max(
-            320,
-            'Email is too long.',
-        ),
+const registerSchema = z
+    .object({
+        displayName: z
+            .string()
+            .trim()
+            .min(
+                1,
+                'Enter your name.',
+            )
+            .max(
+                120,
+                'Name is too long.',
+            ),
 
-    password: z
-        .string()
-        .min(
-            1,
-            'Enter your password.',
-        )
-        .max(
-            72,
-            'Password is too long.',
-        ),
-})
+        email: z
+            .string()
+            .trim()
+            .min(
+                1,
+                'Enter your email.',
+            )
+            .email(
+                'Enter a valid email.',
+            )
+            .max(
+                320,
+                'Email is too long.',
+            ),
 
-type LoginFormData =
-    z.infer<typeof loginSchema>
+        password: z
+            .string()
+            .min(
+                12,
+                'Password must contain at least 12 characters.',
+            )
+            .max(
+                72,
+                'Password must contain at most 72 characters.',
+            ),
 
-type LoginLocationState = {
-    from?: string
-    registered?: boolean
-}
+        confirmPassword: z
+            .string()
+            .min(
+                1,
+                'Confirm your password.',
+            ),
+    })
+    .refine(
+        (data) =>
+            data.password
+            === data.confirmPassword,
+        {
+            message:
+                'Passwords do not match.',
+            path: ['confirmPassword'],
+        },
+    )
 
-export function LoginPage() {
-    const { login } = useAuth()
+type RegisterFormData =
+    z.infer<typeof registerSchema>
+
+export function RegisterPage() {
+    const { register: createAccount } =
+        useAuth()
 
     const navigate = useNavigate()
-    const location = useLocation()
 
     const [serverError, setServerError] =
         useState<string | null>(null)
@@ -65,38 +87,39 @@ export function LoginPage() {
             errors,
             isSubmitting,
         },
-    } = useForm<LoginFormData>({
+    } = useForm<RegisterFormData>({
         resolver: zodResolver(
-            loginSchema,
+            registerSchema,
         ),
 
         defaultValues: {
+            displayName: '',
             email: '',
             password: '',
+            confirmPassword: '',
         },
     })
 
-    const state =
-        location.state as
-            | LoginLocationState
-            | null
-
-    const destination =
-        state?.from
-        ?? '/app/dashboard'
-
     async function onSubmit(
-        data: LoginFormData,
+        data: RegisterFormData,
     ) {
         setServerError(null)
 
         try {
-            await login(data)
+            await createAccount({
+                displayName:
+                data.displayName,
+                email: data.email,
+                password: data.password,
+            })
 
             navigate(
-                destination,
+                '/login',
                 {
                     replace: true,
+                    state: {
+                        registered: true,
+                    },
                 },
             )
         } catch (error) {
@@ -109,7 +132,7 @@ export function LoginPage() {
             }
 
             setServerError(
-                'Unable to sign in. Try again.',
+                'Unable to create account. Try again.',
             )
         }
     }
@@ -127,16 +150,17 @@ export function LoginPage() {
 
                 <header className="auth-header">
                     <p className="auth-eyebrow">
-                        Secure workspace
+                        Create workspace
                     </p>
 
                     <h1>
-                        Welcome back.
+                        Start securing your code.
                     </h1>
 
                     <p>
-                        Sign in to review projects,
-                        analyses and security findings.
+                        Create your account to
+                        analyze projects and review
+                        security findings.
                     </p>
                 </header>
 
@@ -147,15 +171,6 @@ export function LoginPage() {
                     }
                     noValidate
                 >
-                    {state?.registered && (
-                        <div
-                            className="auth-success"
-                            role="status"
-                        >
-                            Account created successfully.
-                            Sign in to continue.
-                        </div>
-                    )}
                     {serverError && (
                         <div
                             className="auth-error"
@@ -164,6 +179,36 @@ export function LoginPage() {
                             {serverError}
                         </div>
                     )}
+
+                    <div className="auth-field">
+                        <label htmlFor="displayName">
+                            Name
+                        </label>
+
+                        <input
+                            id="displayName"
+                            type="text"
+                            autoComplete="name"
+                            placeholder="Your name"
+                            aria-invalid={
+                                Boolean(
+                                    errors.displayName,
+                                )
+                            }
+                            {...register(
+                                'displayName',
+                            )}
+                        />
+
+                        {errors.displayName && (
+                            <span className="field-error">
+                {
+                    errors.displayName
+                        .message
+                }
+              </span>
+                        )}
+                    </div>
 
                     <div className="auth-field">
                         <label htmlFor="email">
@@ -196,8 +241,8 @@ export function LoginPage() {
                         <input
                             id="password"
                             type="password"
-                            autoComplete="current-password"
-                            placeholder="Enter your password"
+                            autoComplete="new-password"
+                            placeholder="At least 12 characters"
                             aria-invalid={
                                 Boolean(
                                     errors.password,
@@ -216,24 +261,56 @@ export function LoginPage() {
                         )}
                     </div>
 
+                    <div className="auth-field">
+                        <label
+                            htmlFor="confirmPassword"
+                        >
+                            Confirm password
+                        </label>
+
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="Repeat your password"
+                            aria-invalid={
+                                Boolean(
+                                    errors.confirmPassword,
+                                )
+                            }
+                            {...register(
+                                'confirmPassword',
+                            )}
+                        />
+
+                        {errors.confirmPassword && (
+                            <span className="field-error">
+                {
+                    errors.confirmPassword
+                        .message
+                }
+              </span>
+                        )}
+                    </div>
+
                     <button
                         className="auth-submit"
                         type="submit"
                         disabled={isSubmitting}
                     >
                         {isSubmitting
-                            ? 'Signing in...'
-                            : 'Sign in'}
+                            ? 'Creating account...'
+                            : 'Create account'}
                     </button>
                 </form>
 
                 <footer className="auth-footer">
           <span>
-            New to CodeFortress?
+            Already have an account?
           </span>
 
-                    <Link to="/register">
-                        Create account
+                    <Link to="/login">
+                        Sign in
                     </Link>
                 </footer>
             </section>
@@ -241,19 +318,19 @@ export function LoginPage() {
             <aside className="auth-visual">
                 <div className="auth-visual__content">
           <span className="auth-visual__badge">
-            SECURITY ANALYSIS
+            CODEFORTRESS
           </span>
 
                     <h2>
-                        Find weaknesses before
-                        they become incidents.
+                        Security belongs in
+                        every development cycle.
                     </h2>
 
                     <p>
-                        Analyze source code,
-                        configurations and
-                        dependencies from one
-                        focused workspace.
+                        Discover exposed secrets,
+                        risky configurations and
+                        vulnerable code before
+                        release.
                     </p>
 
                     <div className="auth-terminal">
@@ -263,33 +340,33 @@ export function LoginPage() {
                             <span />
 
                             <small>
-                                latest-analysis
+                                security-check
                             </small>
                         </div>
 
                         <div className="auth-terminal__body">
                             <p>
-                                <span>$</span>
+                                <span>✓</span>
                                 {' '}
-                                scanning project...
+                                source discovered
                             </p>
 
                             <p>
                                 <span>✓</span>
                                 {' '}
-                                148 files inspected
+                                rules executed
                             </p>
 
                             <p>
                                 <span>!</span>
                                 {' '}
-                                3 findings detected
+                                findings classified
                             </p>
 
                             <p>
                                 <span>→</span>
                                 {' '}
-                                security score: 74
+                                remediation ready
                             </p>
                         </div>
                     </div>

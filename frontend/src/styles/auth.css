@@ -139,6 +139,18 @@
     line-height: 1.5;
 }
 
+.auth-success {
+    border: 1px solid
+    rgb(107 201 140 / 35%);
+    border-radius: 10px;
+    background:
+            rgb(107 201 140 / 8%);
+    padding: 12px 14px;
+    color: #91ddb0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 .auth-submit {
     min-height: 50px;
     border: 0;

@@ -7,6 +7,7 @@ import { ProtectedRoute } from '../features/auth/ProtectedRoute'
 import { PublicOnlyRoute } from '../features/auth/PublicOnlyRoute'
 import { LoginPage } from '../features/auth/LoginPage'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
+import { RegisterPage } from '../features/auth/RegisterPage'
 
 import '../styles/auth.css'
 
@@ -30,21 +31,7 @@ function HomePage() {
     )
 }
 
-function RegisterPlaceholder() {
-    return (
-        <main className="dashboard-preview">
-            <div>
-                <p className="auth-eyebrow">
-                    CodeFortress
-                </p>
 
-                <h1>
-                    Registration is next.
-                </h1>
-            </div>
-        </main>
-    )
-}
 
 function NotFoundPage() {
     return (
@@ -80,9 +67,7 @@ export function AppRouter() {
 
                 <Route
                     path="/register"
-                    element={
-                        <RegisterPlaceholder />
-                    }
+                    element={<RegisterPage />}
                 />
             </Route>
 

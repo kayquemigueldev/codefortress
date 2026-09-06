@@ -3,6 +3,10 @@ package com.codefortress.analysis.api;
 import com.codefortress.analysis.Analysis;
 import com.codefortress.analysis.AnalysisRepository;
 import com.codefortress.analysis.AnalysisStatus;
+import com.codefortress.analysis.Finding;
+import com.codefortress.analysis.FindingCategory;
+import com.codefortress.analysis.FindingRepository;
+import com.codefortress.analysis.Severity;
 import com.codefortress.identity.authentication.LoginCommand;
 import com.codefortress.identity.authentication.LoginResult;
 import com.codefortress.identity.authentication.LoginService;
@@ -21,6 +25,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -39,6 +45,10 @@ class AnalysisControllerTest {
 
     private static final String PASSWORD =
             "correct-password";
+
+    private static final String SOURCE_HASH =
+            "0123456789abcdef0123456789abcdef"
+                    + "0123456789abcdef0123456789abcdef";
 
     @Autowired
     private MockMvc mockMvc;
@@ -57,6 +67,9 @@ class AnalysisControllerTest {
 
     @Autowired
     private AnalysisRepository analysisRepository;
+
+    @Autowired
+    private FindingRepository findingRepository;
 
     @Test
     void shouldUploadSourceArchiveAndQueueAnalysis()
@@ -255,6 +268,215 @@ class AnalysisControllerTest {
                                 project.getId()
                         )
         ).isEmpty();
+    }
+
+    @Test
+    void shouldListFindingsForAnalysis()
+            throws Exception {
+        AuthenticatedUser owner =
+                createAuthenticatedUser(
+                        "Project Owner",
+                        "owner@example.com"
+                );
+
+        Project project =
+                createProject(
+                        owner.user(),
+                        "CodeFortress API"
+                );
+
+        Analysis analysis =
+                createAnalysis(
+                        project,
+                        1
+                );
+
+        Finding finding =
+                createFinding(
+                        analysis
+                );
+
+        mockMvc.perform(
+                        get(
+                                "/api/v1/projects/{projectId}/analyses/{analysisId}/findings",
+                                project.getId(),
+                                analysis.getId()
+                        )
+                                .header(
+                                        HttpHeaders.AUTHORIZATION,
+                                        bearer(owner)
+                                )
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()")
+                        .value(1))
+                .andExpect(jsonPath("$[0].id")
+                        .value(
+                                finding.getId()
+                                        .toString()
+                        ))
+                .andExpect(jsonPath("$[0].ruleKey")
+                        .value("CF-SEC-001"))
+                .andExpect(jsonPath("$[0].ruleVersion")
+                        .value("1.0.0"))
+                .andExpect(jsonPath("$[0].title")
+                        .value("Hardcoded Secret"))
+                .andExpect(jsonPath("$[0].category")
+                        .value("SECRETS"))
+                .andExpect(jsonPath("$[0].severity")
+                        .value("CRITICAL"))
+                .andExpect(jsonPath("$[0].status")
+                        .value("OPEN"))
+                .andExpect(jsonPath("$[0].filePath")
+                        .value("src/Config.java"))
+                .andExpect(jsonPath("$[0].startLine")
+                        .value(2))
+                .andExpect(jsonPath("$[0].endLine")
+                        .value(2))
+                .andExpect(jsonPath("$[0].codeExcerpt")
+                        .value(
+                                "String password = \"********\";"
+                        ))
+                .andExpect(jsonPath("$[0].description")
+                        .isNotEmpty())
+                .andExpect(jsonPath("$[0].impact")
+                        .isNotEmpty())
+                .andExpect(jsonPath("$[0].recommendation")
+                        .isNotEmpty())
+                .andExpect(jsonPath("$[0].fingerprint")
+                        .value("b".repeat(64)))
+                .andExpect(jsonPath("$[0].createdAt")
+                        .isNotEmpty())
+                .andExpect(jsonPath("$[0].statusUpdatedAt")
+                        .isNotEmpty());
+    }
+
+    @Test
+    void shouldHideAnalysisFromAnotherProject()
+            throws Exception {
+        AuthenticatedUser owner =
+                createAuthenticatedUser(
+                        "Project Owner",
+                        "owner@example.com"
+                );
+
+        Project firstProject =
+                createProject(
+                        owner.user(),
+                        "First Project"
+                );
+
+        Project secondProject =
+                createProject(
+                        owner.user(),
+                        "Second Project"
+                );
+
+        Analysis analysis =
+                createAnalysis(
+                        secondProject,
+                        1
+                );
+
+        mockMvc.perform(
+                        get(
+                                "/api/v1/projects/{projectId}/analyses/{analysisId}/findings",
+                                firstProject.getId(),
+                                analysis.getId()
+                        )
+                                .header(
+                                        HttpHeaders.AUTHORIZATION,
+                                        bearer(owner)
+                                )
+                )
+                .andExpect(
+                        status().isNotFound()
+                )
+                .andExpect(
+                        jsonPath("$.code")
+                                .value("ANALYSIS_NOT_FOUND")
+                );
+    }
+
+    @Test
+    void shouldRejectUnauthenticatedFindingsRequest()
+            throws Exception {
+        User owner =
+                createUser(
+                        "owner@example.com",
+                        "Project Owner"
+                );
+
+        Project project =
+                createProject(
+                        owner,
+                        "Protected Project"
+                );
+
+        Analysis analysis =
+                createAnalysis(
+                        project,
+                        1
+                );
+
+        mockMvc.perform(
+                        get(
+                                "/api/v1/projects/{projectId}/analyses/{analysisId}/findings",
+                                project.getId(),
+                                analysis.getId()
+                        )
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+    }
+
+    private Analysis createAnalysis(
+            Project project,
+            int sequenceNumber
+    ) {
+        Analysis analysis =
+                Analysis.queueUpload(
+                        project,
+                        sequenceNumber,
+                        SOURCE_HASH,
+                        "source.zip",
+                        "rules-v1",
+                        "score-v1"
+                );
+
+        return analysisRepository
+                .saveAndFlush(
+                        analysis
+                );
+    }
+
+    private Finding createFinding(
+            Analysis analysis
+    ) {
+        Finding finding =
+                Finding.create(
+                        analysis,
+                        "CF-SEC-001",
+                        "1.0.0",
+                        "b".repeat(64),
+                        "Hardcoded Secret",
+                        FindingCategory.SECRETS,
+                        Severity.CRITICAL,
+                        "src/Config.java",
+                        2,
+                        2,
+                        "String password = \"********\";",
+                        "Secret embedded in source code.",
+                        "Credentials may be exposed.",
+                        "Move the secret to a secure store."
+                );
+
+        return findingRepository
+                .saveAndFlush(
+                        finding
+                );
     }
 
     private AuthenticatedUser createAuthenticatedUser(

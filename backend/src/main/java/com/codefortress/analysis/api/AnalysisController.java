@@ -3,6 +3,7 @@ package com.codefortress.analysis.api;
 import com.codefortress.analysis.listing.ListAnalysesService;
 import com.codefortress.analysis.upload.UploadAnalysisService;
 import com.codefortress.analysis.upload.UploadedAnalysis;
+import com.codefortress.analysis.finding.ListFindingsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,13 +28,16 @@ public class AnalysisController {
 
     private final UploadAnalysisService uploadAnalysisService;
     private final ListAnalysesService listAnalysesService;
+    private final ListFindingsService listFindingsService;
 
     public AnalysisController(
             UploadAnalysisService uploadAnalysisService,
-            ListAnalysesService listAnalysesService
+            ListAnalysesService listAnalysesService,
+            ListFindingsService listFindingsService
     ) {
         this.uploadAnalysisService = uploadAnalysisService;
         this.listAnalysesService = listAnalysesService;
+        this.listFindingsService = listFindingsService;
     }
 
     @PostMapping(
@@ -59,6 +63,7 @@ public class AnalysisController {
 
     @GetMapping
     public List<AnalysisHistoryResponse> list(
+
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID projectId
     ) {
@@ -70,4 +75,27 @@ public class AnalysisController {
                 .map(AnalysisHistoryResponse::from)
                 .toList();
     }
+
+    @GetMapping("/{analysisId}/findings")
+    public List<FindingResponse> listFindings(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID projectId,
+            @PathVariable UUID analysisId
+    ) {
+        UUID ownerId =
+                UUID.fromString(
+                        jwt.getSubject()
+                );
+
+        return listFindingsService
+                .list(
+                        ownerId,
+                        projectId,
+                        analysisId
+                )
+                .stream()
+                .map(FindingResponse::from)
+                .toList();
+    }
+
 }

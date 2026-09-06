@@ -18,6 +18,12 @@ public interface AnalysisRepository
             UUID ownerId
     );
 
+    Optional<Analysis> findByIdAndProject_IdAndProject_Owner_Id(
+            UUID analysisId,
+            UUID projectId,
+            UUID ownerId
+    );
+
     Optional<Analysis> findTopByProject_IdOrderBySequenceNumberDesc(
             UUID projectId
     );

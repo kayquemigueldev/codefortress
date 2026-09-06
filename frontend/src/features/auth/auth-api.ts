@@ -1,4 +1,7 @@
-import { apiRequest } from '../../lib/api/api-client'
+import {
+    apiRequest,
+    authenticatedApiRequest,
+} from '../../lib/api/api-client'
 let refreshPromise: Promise<LoginResponse> | null = null
 
 import type {
@@ -63,13 +66,8 @@ export function register(
     )
 }
 
-export function getCurrentUser(
-    accessToken: string,
-) {
-    return apiRequest<AuthUser>(
-        '/auth/me',
-        {
-            accessToken,
-        },
+export function getCurrentUser() {
+    return authenticatedApiRequest<AuthUser>(
+        '/users/me',
     )
 }

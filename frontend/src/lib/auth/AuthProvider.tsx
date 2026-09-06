@@ -4,7 +4,9 @@ import {
     useMemo,
     useState,
 } from 'react'
-import type { PropsWithChildren } from 'react'
+import type {
+    PropsWithChildren,
+} from 'react'
 
 import {
     login as loginRequest,
@@ -15,14 +17,18 @@ import {
 import type {
     AuthUser,
     LoginRequest,
+    LoginResponse,
     RegisterRequest,
 } from '../../features/auth/auth-types'
-import { ApiError } from '../api/api-error'
 
 import {
     AuthContext,
     type AuthStatus,
 } from './AuthContext'
+import {
+    setAccessToken as setSessionAccessToken,
+    setRefreshHandler,
+} from './auth-session'
 
 export function AuthProvider({
                                  children,
@@ -30,23 +36,25 @@ export function AuthProvider({
     const [user, setUser] =
         useState<AuthUser | null>(null)
 
-    const [accessToken, setAccessToken] =
+    const [
+        accessToken,
+        setAccessToken,
+    ] =
         useState<string | null>(null)
 
     const [status, setStatus] =
-        useState<AuthStatus>('initializing')
+        useState<AuthStatus>(
+            'initializing',
+        )
 
-    useEffect(() => {
-        let active = true
-
-        async function initializeSession() {
-            try {
-                const session =
-                    await refreshSession()
-
-                if (!active) {
-                    return
-                }
+    const applySession =
+        useCallback(
+            (
+                session: LoginResponse,
+            ) => {
+                setSessionAccessToken(
+                    session.accessToken,
+                )
 
                 setAccessToken(
                     session.accessToken,
@@ -59,38 +67,64 @@ export function AuthProvider({
                 setStatus(
                     'authenticated',
                 )
-            } catch (error) {
-                if (!active) {
-                    return
-                }
+            },
+            [],
+        )
 
-                if (
-                    error instanceof ApiError
-                    && error.status === 401
-                ) {
-                    setAccessToken(null)
-                    setUser(null)
-                    setStatus(
-                        'unauthenticated',
-                    )
-
-                    return
-                }
+    const clearSession =
+        useCallback(
+            () => {
+                setSessionAccessToken(null)
 
                 setAccessToken(null)
                 setUser(null)
+
                 setStatus(
                     'unauthenticated',
                 )
+            },
+            [],
+        )
+
+    useEffect(() => {
+        let active = true
+
+        async function renewSession() {
+            try {
+                const session =
+                    await refreshSession()
+
+                if (!active) {
+                    return null
+                }
+
+                applySession(session)
+
+                return session.accessToken
+            } catch {
+                if (active) {
+                    clearSession()
+                }
+
+                return null
             }
         }
 
-        void initializeSession()
+        setRefreshHandler(
+            renewSession,
+        )
+
+        void renewSession()
 
         return () => {
             active = false
+
+            setRefreshHandler(null)
         }
-    }, [])
+    }, [
+        applySession,
+        clearSession,
+    ])
 
     const login =
         useCallback(
@@ -100,19 +134,9 @@ export function AuthProvider({
                 const session =
                     await loginRequest(request)
 
-                setAccessToken(
-                    session.accessToken,
-                )
-
-                setUser(
-                    session.user,
-                )
-
-                setStatus(
-                    'authenticated',
-                )
+                applySession(session)
             },
-            [],
+            [applySession],
         )
 
     const logout =
@@ -121,20 +145,17 @@ export function AuthProvider({
                 try {
                     await logoutRequest()
                 } finally {
-                    setAccessToken(null)
-                    setUser(null)
-                    setStatus(
-                        'unauthenticated',
-                    )
+                    clearSession()
                 }
             },
-            [],
+            [clearSession],
         )
 
     const register =
         useCallback(
             (
-                request: RegisterRequest,
+                request:
+                RegisterRequest,
             ) => {
                 return registerRequest(
                     request,

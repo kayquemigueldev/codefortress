@@ -1,6 +1,7 @@
 package com.codefortress.analysis;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.codefortress.project.ProjectStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,6 +11,19 @@ public interface FindingRepository
 
     List<Finding> findAllByAnalysis_IdOrderByCreatedAtAsc(
             UUID analysisId
+    );
+
+    long countByAnalysis_Project_Owner_IdAndAnalysis_Project_StatusAndStatus(
+            UUID ownerId,
+            ProjectStatus projectStatus,
+            FindingStatus status
+    );
+
+    long countByAnalysis_Project_Owner_IdAndAnalysis_Project_StatusAndStatusAndSeverity(
+            UUID ownerId,
+            ProjectStatus projectStatus,
+            FindingStatus status,
+            Severity severity
     );
 
     boolean existsByAnalysis_IdAndFingerprint(

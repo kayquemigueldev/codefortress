@@ -1,5 +1,6 @@
 package com.codefortress.analysis;
 
+import com.codefortress.project.ProjectStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -31,6 +32,13 @@ public interface AnalysisRepository
     List<Analysis> findAllByProject_IdOrderBySequenceNumberDesc(
             UUID projectId
     );
+
+    Optional<Analysis> findTopByProject_Owner_IdAndProject_StatusOrderByCreatedAtDesc(
+            UUID ownerId,
+            ProjectStatus projectStatus
+    );
+
+
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

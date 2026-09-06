@@ -36,6 +36,11 @@ public interface ProjectRepository
             ProjectStatus status
     );
 
+    long countByOwner_IdAndStatus(
+            UUID ownerId,
+            ProjectStatus status
+    );
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT project

@@ -8,7 +8,9 @@ import { PublicOnlyRoute } from '../features/auth/PublicOnlyRoute'
 import { LoginPage } from '../features/auth/LoginPage'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
+import { ProjectsPage } from '../features/projects/ProjectsPage'
 
+import '../styles/projects.css'
 import '../styles/auth.css'
 
 function HomePage() {
@@ -76,6 +78,11 @@ export function AppRouter() {
                     <ProtectedRoute />
                 }
             >
+                <Route
+                    path="/app/projects"
+                    element={<ProjectsPage />}
+                />
+
                 <Route
                     path="/app/dashboard"
                     element={

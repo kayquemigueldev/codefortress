@@ -8,6 +8,11 @@ import com.codefortress.analysis.upload.LocalSourceArchiveStorage;
 import com.codefortress.analysis.upload.SourceArchiveStorageException;
 import com.codefortress.analysis.upload.UploadAnalysisService;
 import com.codefortress.analysis.upload.UploadedAnalysis;
+import com.codefortress.analysis.Finding;
+import com.codefortress.analysis.FindingCategory;
+import com.codefortress.analysis.FindingRepository;
+import com.codefortress.analysis.FindingStatus;
+import com.codefortress.analysis.Severity;
 import com.codefortress.identity.user.User;
 import com.codefortress.identity.user.UserRepository;
 import com.codefortress.project.Project;
@@ -44,6 +49,9 @@ class AnalysisExecutionServiceTest {
 
     @Autowired
     private AnalysisRepository analysisRepository;
+
+    @Autowired
+    private FindingRepository findingRepository;
 
     @Autowired
     private ProjectRepository projectRepository;
@@ -167,6 +175,82 @@ class AnalysisExecutionServiceTest {
 
         assertThat(result.securityScore())
                 .isEqualTo((short) 100);
+        Finding finding =
+                findingRepository
+                        .findAllByAnalysis_IdOrderByCreatedAtAsc(
+                                uploaded.id()
+                        )
+                        .getFirst();
+
+        assertThat(finding.getRuleKey())
+                .isEqualTo(
+                        "CF-SEC-001"
+                );
+
+        assertThat(finding.getRuleVersion())
+                .isEqualTo(
+                        "1.0.0"
+                );
+
+        assertThat(finding.getTitle())
+                .isEqualTo(
+                        "Hardcoded Secret"
+                );
+
+        assertThat(finding.getCategory())
+                .isEqualTo(
+                        FindingCategory.SECRETS
+                );
+
+        assertThat(finding.getSeverity())
+                .isEqualTo(
+                        Severity.CRITICAL
+                );
+
+        assertThat(finding.getStatus())
+                .isEqualTo(
+                        FindingStatus.OPEN
+                );
+
+        assertThat(finding.getFilePath())
+                .isEqualTo(
+                        "src/Config.java"
+                );
+
+        assertThat(finding.getStartLine())
+                .isEqualTo(2);
+
+        assertThat(finding.getEndLine())
+                .isEqualTo(2);
+
+        assertThat(finding.getCodeExcerpt())
+                .contains(
+                        "********"
+                )
+                .doesNotContain(
+                        "super-secret-password"
+                );
+
+        assertThat(finding.getDescription())
+                .isNotBlank();
+
+        assertThat(finding.getImpact())
+                .isNotBlank();
+
+        assertThat(finding.getRecommendation())
+                .isNotBlank();
+
+        assertThat(finding.getFingerprint())
+                .matches(
+                        "[0-9a-f]{64}"
+                );
+
+        assertThat(finding.getCreatedAt())
+                .isNotNull();
+
+        assertThat(finding.getStatusUpdatedAt())
+                .isNotNull();
+
     }
 
     @Test

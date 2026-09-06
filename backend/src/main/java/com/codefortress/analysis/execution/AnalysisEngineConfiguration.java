@@ -1,5 +1,7 @@
 package com.codefortress.analysis.execution;
 
+import com.codefortress.analysis.engine.FindingFactory;
+import com.codefortress.analysis.engine.FindingFingerprintGenerator;
 import com.codefortress.analysis.engine.SecurityRuleExecutor;
 import com.codefortress.analysis.engine.rules.HardcodedSecretRule;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +18,20 @@ public class AnalysisEngineConfiguration {
                 List.of(
                         new HardcodedSecretRule()
                 )
+        );
+    }
+
+    @Bean
+    public FindingFingerprintGenerator findingFingerprintGenerator() {
+        return new FindingFingerprintGenerator();
+    }
+
+    @Bean
+    public FindingFactory findingFactory(
+            FindingFingerprintGenerator fingerprintGenerator
+    ) {
+        return new FindingFactory(
+                fingerprintGenerator
         );
     }
 }

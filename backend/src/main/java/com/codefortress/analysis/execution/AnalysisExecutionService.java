@@ -16,6 +16,7 @@ import com.codefortress.analysis.lifecycle.AnalysisLifecycleService;
 import com.codefortress.analysis.lifecycle.AnalysisState;
 import com.codefortress.analysis.upload.LocalSourceArchiveStorage;
 import com.codefortress.analysis.upload.SourceArchiveStorageException;
+import com.codefortress.analysis.finding.FindingPersistenceService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class AnalysisExecutionService {
     private final SourceMetricsCalculator metricsCalculator;
     private final SourceFileLoader fileLoader;
     private final SecurityRuleExecutor ruleExecutor;
+    private final FindingPersistenceService findingPersistenceService;
     private final LocalSourceArchiveStorage archiveStorage;
 
     public AnalysisExecutionService(
@@ -44,6 +46,7 @@ public class AnalysisExecutionService {
             SourceMetricsCalculator metricsCalculator,
             SourceFileLoader fileLoader,
             SecurityRuleExecutor ruleExecutor,
+            FindingPersistenceService findingPersistenceService,
             LocalSourceArchiveStorage archiveStorage
     ) {
         this.lifecycleService = lifecycleService;
@@ -52,6 +55,7 @@ public class AnalysisExecutionService {
         this.metricsCalculator = metricsCalculator;
         this.fileLoader = fileLoader;
         this.ruleExecutor = ruleExecutor;
+        this.findingPersistenceService = findingPersistenceService;
         this.archiveStorage = archiveStorage;
     }
 
@@ -89,6 +93,12 @@ public class AnalysisExecutionService {
                             context
                     );
 
+            int findingsCount =
+                    findingPersistenceService.persist(
+                            analysisId,
+                            matches
+                    );
+
             removeSourceArtifacts(analysisId);
 
             return lifecycleService.complete(
@@ -96,7 +106,7 @@ public class AnalysisExecutionService {
                     INITIAL_SECURITY_SCORE,
                     metrics.filesScanned(),
                     metrics.linesScanned(),
-                    matches.size()
+                    findingsCount
             );
         } catch (RuntimeException exception) {
             removeSourceArtifactsQuietly(analysisId);

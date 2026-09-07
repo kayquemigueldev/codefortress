@@ -807,3 +807,37 @@ max-width: 460px
         grid-template-columns: 1fr;
     }
 }
+
+.project-edit-button {
+    display: inline-flex;
+    min-height: 40px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #2a3540;
+    border-radius: 9px;
+    background: #10161d;
+    padding: 0 16px;
+    color: #a4b0bb;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+            border-color 120ms ease,
+            background 120ms ease,
+            color 120ms ease;
+}
+
+.project-edit-button:hover {
+    border-color: #40505e;
+    background: #141c24;
+    color: #edf3f8;
+}
+
+@media (
+max-width: 700px
+) {
+    .project-edit-button {
+        width: 100%;
+    }
+}

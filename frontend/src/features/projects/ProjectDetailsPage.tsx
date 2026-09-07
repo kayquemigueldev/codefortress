@@ -153,6 +153,15 @@ export function ProjectDetailsPage() {
                                     .toUpperCase()}
                             </div>
 
+                            <Link
+                                className="project-edit-button"
+                                to={
+                                    `/app/projects/${project.id}/edit`
+                                }
+                            >
+                                Edit project
+                            </Link>
+
                             <span className="project-status">
                 {project.status}
               </span>

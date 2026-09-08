@@ -11,6 +11,7 @@ import {
 } from 'react-router'
 import {
     useEffect,
+    useState,
 } from 'react'
 import {
     useForm,
@@ -20,6 +21,7 @@ import { z } from 'zod'
 import { ApiError } from '../../lib/api/api-error'
 
 import {
+    archiveProject,
     getProject,
     updateProject,
 } from './project-api'
@@ -57,6 +59,16 @@ export function EditProjectPage() {
 
     const navigate = useNavigate()
     const queryClient = useQueryClient()
+
+    const [
+        showArchiveConfirmation,
+        setShowArchiveConfirmation,
+    ] = useState(false)
+
+    const [
+        archiveError,
+        setArchiveError,
+    ] = useState<string | null>(null)
 
     const projectQuery = useQuery({
         queryKey: [
@@ -155,6 +167,39 @@ export function EditProjectPage() {
         },
     })
 
+    const archiveMutation = useMutation({
+        mutationFn: () =>
+            archiveProject(
+                projectId ?? '',
+            ),
+
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: ['projects'],
+                }),
+
+                queryClient.invalidateQueries({
+                    queryKey: ['dashboard'],
+                }),
+            ])
+
+            queryClient.removeQueries({
+                queryKey: [
+                    'projects',
+                    projectId,
+                ],
+            })
+
+            navigate(
+                '/app/projects',
+                {
+                    replace: true,
+                },
+            )
+        },
+    })
+
     async function onSubmit(
         data: ProjectFormData,
     ) {
@@ -183,6 +228,27 @@ export function EditProjectPage() {
                     message:
                         'Unable to update project. Try again.',
                 },
+            )
+        }
+    }
+
+    async function handleArchive() {
+        setArchiveError(null)
+        archiveMutation.reset()
+
+        try {
+            await archiveMutation.mutateAsync()
+        } catch (error) {
+            if (error instanceof ApiError) {
+                setArchiveError(
+                    error.message,
+                )
+
+                return
+            }
+
+            setArchiveError(
+                'Unable to archive project. Try again.',
             )
         }
     }
@@ -344,6 +410,101 @@ export function EditProjectPage() {
               </span>
                         )}
                     </div>
+
+                    <section className="project-danger-zone">
+                        <div className="project-danger-zone__heading">
+                            <div>
+                                <p className="projects-eyebrow">
+                                    Danger zone
+                                </p>
+
+                                <h2>
+                                    Archive project
+                                </h2>
+
+                                <p>
+                                    Archiving removes this project
+                                    from your active workspace.
+                                    Existing analyses and findings
+                                    are preserved.
+                                </p>
+                            </div>
+
+                            {!showArchiveConfirmation && (
+                                <button
+                                    className="project-danger-button"
+                                    type="button"
+                                    onClick={() => {
+                                        setArchiveError(null)
+                                        setShowArchiveConfirmation(
+                                            true,
+                                        )
+                                    }}
+                                >
+                                    Archive project
+                                </button>
+                            )}
+                        </div>
+
+                        {showArchiveConfirmation && (
+                            <div className="project-archive-confirmation">
+                                <div>
+                                    <strong>
+                                        Archive {project.name}?
+                                    </strong>
+
+                                    <p>
+                                        The project will no longer
+                                        appear in your active project
+                                        list. This does not permanently
+                                        delete its stored data.
+                                    </p>
+                                </div>
+
+                                {archiveError && (
+                                    <div
+                                        className="project-form-error"
+                                        role="alert"
+                                    >
+                                        {archiveError}
+                                    </div>
+                                )}
+
+                                <div className="project-archive-actions">
+                                    <button
+                                        className="project-secondary-button"
+                                        type="button"
+                                        disabled={
+                                            archiveMutation.isPending
+                                        }
+                                        onClick={() => {
+                                            setArchiveError(null)
+                                            setShowArchiveConfirmation(
+                                                false,
+                                            )
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        className="project-danger-button project-danger-button--confirm"
+                                        type="button"
+                                        disabled={
+                                            archiveMutation.isPending
+                                        }
+                                        onClick={() => {
+                                            void handleArchive()
+                                        }}
+                                    >
+                                        {archiveMutation.isPending
+                                            ? 'Archiving...'
+                                            : 'Yes, archive project'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </section>
 
                     <div className="project-form-field">
                         <div className="project-form-label">

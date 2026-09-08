@@ -841,3 +841,125 @@ max-width: 700px
         width: 100%;
     }
 }
+
+.project-danger-zone {
+    margin-top: 42px;
+    border: 1px solid
+    rgb(209 91 91 / 28%);
+    border-radius: 13px;
+    background:
+            rgb(155 48 48 / 4%);
+    padding: 22px;
+}
+
+.project-danger-zone__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+}
+
+.project-danger-zone__heading h2 {
+    margin: 0;
+    color: #edf2f7;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+}
+
+.project-danger-zone__heading
+> div > p:last-child {
+    max-width: 480px;
+    margin: 8px 0 0;
+    color: #7f8b98;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.project-danger-button {
+    display: inline-flex;
+    min-height: 40px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid
+    rgb(214 94 94 / 38%);
+    border-radius: 9px;
+    background:
+            rgb(181 56 56 / 7%);
+    padding: 0 15px;
+    color: #e48181;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+    transition:
+            border-color 120ms ease,
+            background 120ms ease;
+}
+
+.project-danger-button:hover:not(
+  :disabled
+) {
+    border-color:
+            rgb(224 107 107 / 60%);
+    background:
+            rgb(181 56 56 / 12%);
+}
+
+.project-danger-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.project-danger-button--confirm {
+    background:
+            rgb(181 56 56 / 14%);
+}
+
+.project-archive-confirmation {
+    margin-top: 20px;
+    border-top: 1px solid
+    rgb(209 91 91 / 18%);
+    padding-top: 20px;
+}
+
+.project-archive-confirmation strong {
+    color: #e8edf2;
+    font-size: 13px;
+}
+
+.project-archive-confirmation p {
+    max-width: 520px;
+    margin: 7px 0 0;
+    color: #7c8996;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.project-archive-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+@media (
+max-width: 700px
+) {
+    .project-danger-zone__heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .project-danger-button {
+        width: 100%;
+    }
+
+    .project-archive-actions {
+        flex-direction: column-reverse;
+    }
+
+    .project-archive-actions
+    .project-secondary-button {
+        width: 100%;
+    }
+}

@@ -1,5 +1,7 @@
 import {
+    useMutation,
     useQuery,
+    useQueryClient,
 } from '@tanstack/react-query'
 import {
     Link,
@@ -10,10 +12,12 @@ import { ApiError } from '../../lib/api/api-error'
 
 import {
     listFindings,
+    updateFindingStatus,
 } from './finding-api'
 import type {
     Finding,
     FindingSeverity,
+    FindingStatus,
 } from './finding-types'
 
 export function AnalysisFindingsPage() {
@@ -25,6 +29,57 @@ export function AnalysisFindingsPage() {
             projectId: string
             analysisId: string
         }>()
+
+    const queryClient =
+        useQueryClient()
+
+    const updateStatusMutation =
+        useMutation({
+            mutationFn: ({
+                             findingId,
+                             status,
+                         }: {
+                findingId: string
+                status: FindingStatus
+            }) =>
+                updateFindingStatus(
+                    projectId ?? '',
+                    analysisId ?? '',
+                    findingId,
+                    status,
+                ),
+
+            onSuccess: (
+                updatedFinding,
+            ) => {
+                queryClient.setQueryData<
+                    Finding[]
+                >(
+                    [
+                        'projects',
+                        projectId,
+                        'analyses',
+                        analysisId,
+                        'findings',
+                    ],
+                    (currentFindings) =>
+                        currentFindings?.map(
+                            (finding) =>
+                                finding.id
+                                === updatedFinding.id
+                                    ? updatedFinding
+                                    : finding,
+                        ),
+                )
+
+                void queryClient
+                    .invalidateQueries({
+                        queryKey: [
+                            'dashboard',
+                        ],
+                    })
+            },
+        })
 
     const findingsQuery = useQuery({
         queryKey: [
@@ -231,6 +286,36 @@ export function AnalysisFindingsPage() {
                                 <FindingCard
                                     key={finding.id}
                                     finding={finding}
+                                    isUpdating={
+                                        updateStatusMutation
+                                            .isPending
+                                        && updateStatusMutation
+                                            .variables
+                                            ?.findingId
+                                        === finding.id
+                                    }
+                                    errorMessage={
+                                        updateStatusMutation
+                                            .isError
+                                        && updateStatusMutation
+                                            .variables
+                                            ?.findingId
+                                        === finding.id
+                                            ? getMutationError(
+                                                updateStatusMutation
+                                                    .error,
+                                            )
+                                            : null
+                                    }
+                                    onUpdateStatus={(
+                                        status,
+                                    ) => {
+                                        updateStatusMutation.mutate({
+                                            findingId:
+                                            finding.id,
+                                            status,
+                                        })
+                                    }}
                                 />
                             ),
                         )}
@@ -243,8 +328,16 @@ export function AnalysisFindingsPage() {
 
 function FindingCard({
                          finding,
+                         isUpdating,
+                         errorMessage,
+                         onUpdateStatus,
                      }: {
     finding: Finding
+    isUpdating: boolean
+    errorMessage: string | null
+    onUpdateStatus: (
+        status: FindingStatus,
+    ) => void
 }) {
     return (
         <article className="finding-card">
@@ -344,6 +437,61 @@ function FindingCard({
                 />
             </section>
 
+            <section className="finding-actions">
+                <div className="finding-actions__heading">
+                    <div>
+            <span>
+                Finding status
+            </span>
+
+                        <strong>
+                            {formatEnum(
+                                finding.status,
+                            )}
+                        </strong>
+                    </div>
+
+                    <p>
+                        Update how this finding
+                        should be handled in your
+                        security workflow.
+                    </p>
+                </div>
+
+                {errorMessage && (
+                    <div
+                        className="finding-actions__error"
+                        role="alert"
+                    >
+                        {errorMessage}
+                    </div>
+                )}
+
+                <div className="finding-actions__buttons">
+                    {getStatusActions(
+                        finding.status,
+                    ).map((action) => (
+                        <button
+                            key={action.status}
+                            className={
+                                `finding-action-button finding-action-button--${action.variant}`
+                            }
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() => {
+                                onUpdateStatus(
+                                    action.status,
+                                )
+                            }}
+                        >
+                            {isUpdating
+                                ? 'Updating...'
+                                : action.label}
+                        </button>
+                    ))}
+                </div>
+            </section>
+
             <footer className="finding-card__footer">
         <span>
           Fingerprint
@@ -438,4 +586,56 @@ function formatEnum(
                 + part.slice(1),
         )
         .join(' ')
+}
+
+type StatusAction = {
+    status: FindingStatus
+    label: string
+    variant:
+        | 'primary'
+        | 'neutral'
+        | 'warning'
+}
+
+function getStatusActions(
+    currentStatus: FindingStatus,
+): StatusAction[] {
+    const actions: StatusAction[] = [
+        {
+            status: 'OPEN',
+            label: 'Reopen',
+            variant: 'neutral',
+        },
+        {
+            status: 'RESOLVED',
+            label: 'Resolve',
+            variant: 'primary',
+        },
+        {
+            status: 'ACCEPTED_RISK',
+            label: 'Accept risk',
+            variant: 'warning',
+        },
+        {
+            status: 'FALSE_POSITIVE',
+            label: 'False positive',
+            variant: 'neutral',
+        },
+    ]
+
+    return actions.filter(
+        (action) =>
+            action.status
+            !== currentStatus,
+    )
+}
+
+function getMutationError(
+    error: unknown,
+) {
+    if (error instanceof ApiError) {
+        return error.message
+    }
+
+    return 'Unable to update finding status. Try again.'
 }

@@ -4,6 +4,7 @@ import {
 
 import type {
     Finding,
+    FindingStatus,
 } from './finding-types'
 
 export function listFindings(
@@ -12,5 +13,28 @@ export function listFindings(
 ) {
     return authenticatedApiRequest<Finding[]>(
         `/projects/${projectId}/analyses/${analysisId}/findings`,
+    )
+}
+
+export function updateFindingStatus(
+    projectId: string,
+    analysisId: string,
+    findingId: string,
+    status: FindingStatus,
+) {
+    return authenticatedApiRequest<Finding>(
+        `/projects/${projectId}/analyses/${analysisId}/findings/${findingId}/status`,
+        {
+            method: 'PATCH',
+
+            headers: {
+                'Content-Type':
+                    'application/json',
+            },
+
+            body: JSON.stringify({
+                status,
+            }),
+        },
     )
 }

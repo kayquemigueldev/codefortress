@@ -412,6 +412,23 @@ public class Finding {
         return status;
     }
 
+    public void updateStatus(
+            FindingStatus status
+    ) {
+        FindingStatus validatedStatus =
+                Objects.requireNonNull(
+                        status,
+                        "status must not be null"
+                );
+
+        if (this.status == validatedStatus) {
+            return;
+        }
+
+        this.status = validatedStatus;
+        this.statusUpdatedAt = Instant.now();
+    }
+
     public String getFilePath() {
         return filePath;
     }

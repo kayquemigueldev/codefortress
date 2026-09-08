@@ -7,6 +7,7 @@ import com.codefortress.analysis.Finding;
 import com.codefortress.analysis.FindingCategory;
 import com.codefortress.analysis.FindingRepository;
 import com.codefortress.analysis.Severity;
+import com.codefortress.analysis.FindingStatus;
 import com.codefortress.identity.authentication.LoginCommand;
 import com.codefortress.identity.authentication.LoginResult;
 import com.codefortress.identity.authentication.LoginService;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -429,6 +432,211 @@ class AnalysisControllerTest {
                 )
                 .andExpect(
                         status().isUnauthorized()
+                );
+    }
+
+    @Test
+    void shouldUpdateFindingStatus()
+            throws Exception {
+        AuthenticatedUser owner =
+                createAuthenticatedUser(
+                        "Project Owner",
+                        "owner@example.com"
+                );
+
+        Project project =
+                createProject(
+                        owner.user(),
+                        "CodeFortress API"
+                );
+
+        Analysis analysis =
+                createAnalysis(
+                        project,
+                        1
+                );
+
+        Finding finding =
+                createFinding(
+                        analysis
+                );
+
+        mockMvc.perform(
+                        patch(
+                                "/api/v1/projects/{projectId}/analyses/{analysisId}/findings/{findingId}/status",
+                                project.getId(),
+                                analysis.getId(),
+                                finding.getId()
+                        )
+                                .header(
+                                        HttpHeaders.AUTHORIZATION,
+                                        bearer(owner)
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        """
+                                        {
+                                          "status": "RESOLVED"
+                                        }
+                                        """
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                )
+                .andExpect(
+                        jsonPath("$.id")
+                                .value(
+                                        finding.getId()
+                                                .toString()
+                                )
+                )
+                .andExpect(
+                        jsonPath("$.status")
+                                .value("RESOLVED")
+                )
+                .andExpect(
+                        jsonPath("$.statusUpdatedAt")
+                                .isNotEmpty()
+                );
+
+        Finding persistedFinding =
+                findingRepository
+                        .findById(
+                                finding.getId()
+                        )
+                        .orElseThrow();
+
+        assertThat(
+                persistedFinding.getStatus()
+        ).isEqualTo(
+                FindingStatus.RESOLVED
+        );
+    }
+
+    @Test
+    void shouldRejectFindingFromAnotherAnalysis()
+            throws Exception {
+        AuthenticatedUser owner =
+                createAuthenticatedUser(
+                        "Project Owner",
+                        "owner@example.com"
+                );
+
+        Project project =
+                createProject(
+                        owner.user(),
+                        "CodeFortress API"
+                );
+
+        Analysis firstAnalysis =
+                createAnalysis(
+                        project,
+                        1
+                );
+
+        Analysis secondAnalysis =
+                createAnalysis(
+                        project,
+                        2
+                );
+
+        Finding finding =
+                createFinding(
+                        secondAnalysis
+                );
+
+        mockMvc.perform(
+                        patch(
+                                "/api/v1/projects/{projectId}/analyses/{analysisId}/findings/{findingId}/status",
+                                project.getId(),
+                                firstAnalysis.getId(),
+                                finding.getId()
+                        )
+                                .header(
+                                        HttpHeaders.AUTHORIZATION,
+                                        bearer(owner)
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        """
+                                        {
+                                          "status": "RESOLVED"
+                                        }
+                                        """
+                                )
+                )
+                .andExpect(
+                        status().isNotFound()
+                )
+                .andExpect(
+                        jsonPath("$.code")
+                                .value(
+                                        "FINDING_NOT_FOUND"
+                                )
+                );
+    }
+
+    @Test
+    void shouldRejectMissingFindingStatus()
+            throws Exception {
+        AuthenticatedUser owner =
+                createAuthenticatedUser(
+                        "Project Owner",
+                        "owner@example.com"
+                );
+
+        Project project =
+                createProject(
+                        owner.user(),
+                        "CodeFortress API"
+                );
+
+        Analysis analysis =
+                createAnalysis(
+                        project,
+                        1
+                );
+
+        Finding finding =
+                createFinding(
+                        analysis
+                );
+
+        mockMvc.perform(
+                        patch(
+                                "/api/v1/projects/{projectId}/analyses/{analysisId}/findings/{findingId}/status",
+                                project.getId(),
+                                analysis.getId(),
+                                finding.getId()
+                        )
+                                .header(
+                                        HttpHeaders.AUTHORIZATION,
+                                        bearer(owner)
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content("{}")
+                )
+                .andExpect(
+                        status().isBadRequest()
+                )
+                .andExpect(
+                        jsonPath("$.code")
+                                .value(
+                                        "VALIDATION_ERROR"
+                                )
+                )
+                .andExpect(
+                        jsonPath("$.fieldErrors.status")
+                                .value(
+                                        "status is required"
+                                )
                 );
     }
 

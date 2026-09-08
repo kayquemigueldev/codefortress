@@ -1,6 +1,7 @@
 package com.codefortress.shared.api;
 
 import com.codefortress.analysis.lifecycle.AnalysisNotFoundException;
+import com.codefortress.analysis.finding.FindingNotFoundException;
 import com.codefortress.identity.authentication.InvalidCredentialsException;
 import com.codefortress.identity.authentication.refresh.InvalidRefreshTokenException;
 import com.codefortress.identity.registration.EmailAlreadyRegisteredException;
@@ -147,6 +148,19 @@ public class ApiExceptionHandler {
     ) {
         return new ApiErrorResponse(
                 "ANALYSIS_NOT_FOUND",
+                exception.getMessage(),
+                Map.of(),
+                Instant.now()
+        );
+    }
+
+    @ExceptionHandler(FindingNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiErrorResponse handleFindingNotFound(
+            FindingNotFoundException exception
+    ) {
+        return new ApiErrorResponse(
+                "FINDING_NOT_FOUND",
                 exception.getMessage(),
                 Map.of(),
                 Instant.now()

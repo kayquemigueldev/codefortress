@@ -1,4 +1,10 @@
 package com.codefortress.analysis.api;
 
-public class UpdateFindingStatusRequest {
+import com.codefortress.analysis.FindingStatus;
+import jakarta.validation.constraints.NotNull;
+
+public record UpdateFindingStatusRequest(
+        @NotNull(message = "status is required")
+        FindingStatus status
+) {
 }

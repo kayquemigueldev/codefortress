@@ -10,12 +10,15 @@ import {
 
 import { ApiError } from '../../lib/api/api-error'
 
+import { useState } from 'react'
+
 import {
     listFindings,
     updateFindingStatus,
 } from './finding-api'
 import type {
     Finding,
+    FindingCategory,
     FindingSeverity,
     FindingStatus,
 } from './finding-types'
@@ -29,6 +32,20 @@ export function AnalysisFindingsPage() {
             projectId: string
             analysisId: string
         }>()
+    const [
+        statusFilter,
+        setStatusFilter,
+    ] = useState<FindingStatus | 'ALL'>('ALL')
+
+    const [
+        severityFilter,
+        setSeverityFilter,
+    ] = useState<FindingSeverity | 'ALL'>('ALL')
+
+    const [
+        categoryFilter,
+        setCategoryFilter,
+    ] = useState<FindingCategory | 'ALL'>('ALL')
 
     const queryClient =
         useQueryClient()
@@ -179,6 +196,35 @@ export function AnalysisFindingsPage() {
     const findings =
         findingsQuery.data
 
+    const filteredFindings =
+        findings.filter((finding) => {
+            const matchesStatus =
+                statusFilter === 'ALL'
+                || finding.status
+                === statusFilter
+
+            const matchesSeverity =
+                severityFilter === 'ALL'
+                || finding.severity
+                === severityFilter
+
+            const matchesCategory =
+                categoryFilter === 'ALL'
+                || finding.category
+                === categoryFilter
+
+            return (
+                matchesStatus
+                && matchesSeverity
+                && matchesCategory
+            )
+        })
+
+    const hasActiveFilters =
+        statusFilter !== 'ALL'
+        || severityFilter !== 'ALL'
+        || categoryFilter !== 'ALL'
+
     const criticalCount =
         countSeverity(
             findings,
@@ -263,6 +309,97 @@ export function AnalysisFindingsPage() {
                     />
                 </section>
 
+                <section className="findings-filters">
+                    <div className="findings-filters__header">
+                        <div>
+                            <p className="projects-eyebrow">
+                                Filters
+                            </p>
+
+                            <h2>
+                                Refine findings
+                            </h2>
+                        </div>
+
+                        <span className="findings-filters__count">
+            {filteredFindings.length}
+                            {' '}
+                            of
+                            {' '}
+                            {findings.length}
+                            {' '}
+                            findings
+        </span>
+                    </div>
+
+                    <div className="findings-filters__grid">
+                        <FilterSelect
+                            label="Status"
+                            value={statusFilter}
+                            options={[
+                                'ALL',
+                                'OPEN',
+                                'RESOLVED',
+                                'ACCEPTED_RISK',
+                                'FALSE_POSITIVE',
+                            ]}
+                            onChange={(value) => {
+                                setStatusFilter(
+                                    value as FindingStatus | 'ALL',
+                                )
+                            }}
+                        />
+
+                        <FilterSelect
+                            label="Severity"
+                            value={severityFilter}
+                            options={[
+                                'ALL',
+                                'CRITICAL',
+                                'HIGH',
+                                'MEDIUM',
+                                'LOW',
+                            ]}
+                            onChange={(value) => {
+                                setSeverityFilter(
+                                    value as FindingSeverity | 'ALL',
+                                )
+                            }}
+                        />
+
+                        <FilterSelect
+                            label="Category"
+                            value={categoryFilter}
+                            options={[
+                                'ALL',
+                                'SECRETS',
+                                'CONFIGURATION',
+                                'CODE',
+                                'DEPENDENCY',
+                            ]}
+                            onChange={(value) => {
+                                setCategoryFilter(
+                                    value as FindingCategory | 'ALL',
+                                )
+                            }}
+                        />
+                    </div>
+
+                    {hasActiveFilters && (
+                        <button
+                            className="findings-clear-filters"
+                            type="button"
+                            onClick={() => {
+                                setStatusFilter('ALL')
+                                setSeverityFilter('ALL')
+                                setCategoryFilter('ALL')
+                            }}
+                        >
+                            Clear filters
+                        </button>
+                    )}
+                </section>
+
                 {findings.length === 0 ? (
                     <section className="findings-empty">
                         <div className="findings-empty__mark">
@@ -279,9 +416,25 @@ export function AnalysisFindingsPage() {
                             findings.
                         </p>
                     </section>
-                ) : (
-                    <section className="findings-list">
-                        {findings.map(
+                ) : filteredFindings.length === 0 ? (
+                            <section className="findings-empty">
+                                <div className="findings-empty__mark">
+                                    !
+                                </div>
+
+                                <h2>
+                                    No findings match these filters.
+                                </h2>
+
+                                <p>
+                                    Adjust or clear the active filters
+                                    to see other findings.
+                                </p>
+                            </section>
+                        ) : (
+                            <section className="findings-list">
+                                {filteredFindings.map(
+
                             (finding) => (
                                 <FindingCard
                                     key={finding.id}
@@ -522,6 +675,52 @@ function FindingDetail({
                 {content}
             </p>
         </div>
+    )
+}
+
+function FilterSelect({
+                          label,
+                          value,
+                          options,
+                          onChange,
+                      }: {
+    label: string
+    value: string
+    options: string[]
+    onChange: (
+        value: string,
+    ) => void
+}) {
+    return (
+        <label className="findings-filter">
+            <span>
+                {label}
+            </span>
+
+            <select
+                value={value}
+                onChange={(event) => {
+                    onChange(
+                        event.target.value,
+                    )
+                }}
+            >
+                {options.map(
+                    (option) => (
+                        <option
+                            key={option}
+                            value={option}
+                        >
+                            {option === 'ALL'
+                                ? 'All'
+                                : formatEnum(
+                                    option,
+                                )}
+                        </option>
+                    ),
+                )}
+            </select>
+        </label>
     )
 }
 

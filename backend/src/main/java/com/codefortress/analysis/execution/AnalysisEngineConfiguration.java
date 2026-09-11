@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.codefortress.analysis.engine.rules.DebugModeEnabledRule;
 import com.codefortress.analysis.engine.rules.TlsCertificateVerificationDisabledRule;
+import com.codefortress.analysis.engine.rules.PermissiveCorsConfigurationRule;
 
 import java.util.List;
 
@@ -20,7 +21,8 @@ public class AnalysisEngineConfiguration {
                 List.of(
                         new HardcodedSecretRule(),
                         new DebugModeEnabledRule(),
-                        new TlsCertificateVerificationDisabledRule()
+                        new TlsCertificateVerificationDisabledRule(),
+                        new PermissiveCorsConfigurationRule()
                 )
         );
     }

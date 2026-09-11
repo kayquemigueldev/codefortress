@@ -369,6 +369,121 @@ class AnalysisExecutionServiceTest {
     }
 
     @Test
+    void shouldDetectDisabledTlsCertificateVerification()
+            throws IOException {
+        User owner = createUser();
+        Project project = createProject(owner);
+
+        Map<String, String> entries =
+                new LinkedHashMap<>();
+
+        entries.put(
+                "application.properties",
+                """
+                ssl.verify=false
+                """
+        );
+
+        UploadedAnalysis uploaded =
+                uploadAnalysisService.upload(
+                        owner.getId(),
+                        project.getId(),
+                        multipartFile(
+                                createZip(entries)
+                        )
+                );
+
+        AnalysisState result =
+                executionService.execute(
+                        uploaded.id()
+                );
+
+        assertThat(result.status())
+                .isEqualTo(
+                        AnalysisStatus.COMPLETED
+                );
+
+        assertThat(result.filesScanned())
+                .isEqualTo(1);
+
+        assertThat(result.linesScanned())
+                .isEqualTo(1L);
+
+        assertThat(result.findingsCount())
+                .isEqualTo(1);
+
+        assertThat(result.securityScore())
+                .isEqualTo((short) 74);
+
+        Finding finding =
+                findingRepository
+                        .findAllByAnalysis_IdOrderByCreatedAtAsc(
+                                uploaded.id()
+                        )
+                        .getFirst();
+
+        assertThat(finding.getRuleKey())
+                .isEqualTo(
+                        "CF-SEC-003"
+                );
+
+        assertThat(finding.getRuleVersion())
+                .isEqualTo(
+                        "1.0.0"
+                );
+
+        assertThat(finding.getTitle())
+                .isEqualTo(
+                        "TLS Certificate Verification Disabled"
+                );
+
+        assertThat(finding.getCategory())
+                .isEqualTo(
+                        FindingCategory.CONFIGURATION
+                );
+
+        assertThat(finding.getSeverity())
+                .isEqualTo(
+                        Severity.HIGH
+                );
+
+        assertThat(finding.getStatus())
+                .isEqualTo(
+                        FindingStatus.OPEN
+                );
+
+        assertThat(finding.getFilePath())
+                .isEqualTo(
+                        "application.properties"
+                );
+
+        assertThat(finding.getStartLine())
+                .isEqualTo(1);
+
+        assertThat(finding.getEndLine())
+                .isEqualTo(1);
+
+        assertThat(finding.getCodeExcerpt())
+                .contains(
+                        "ssl.verify=false"
+                );
+
+        assertThat(finding.getDescription())
+                .isNotBlank();
+
+        assertThat(finding.getImpact())
+                .isNotBlank();
+
+        assertThat(finding.getRecommendation())
+                .isNotBlank();
+
+        assertThat(finding.getFingerprint())
+                .matches(
+                        "[0-9a-f]{64}"
+                );
+    }
+
+    @Test
     void shouldFailAnalysisWhenArchiveHasNoFiles()
             throws IOException {
         User owner = createUser();

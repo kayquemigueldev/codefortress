@@ -7,6 +7,7 @@ import com.codefortress.analysis.engine.rules.HardcodedSecretRule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.codefortress.analysis.engine.rules.DebugModeEnabledRule;
+import com.codefortress.analysis.engine.rules.TlsCertificateVerificationDisabledRule;
 
 import java.util.List;
 
@@ -18,7 +19,8 @@ public class AnalysisEngineConfiguration {
         return new SecurityRuleExecutor(
                 List.of(
                         new HardcodedSecretRule(),
-                        new DebugModeEnabledRule()
+                        new DebugModeEnabledRule(),
+                        new TlsCertificateVerificationDisabledRule()
                 )
         );
     }

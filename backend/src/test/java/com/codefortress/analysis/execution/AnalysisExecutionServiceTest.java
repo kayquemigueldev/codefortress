@@ -75,7 +75,7 @@ class AnalysisExecutionServiceTest {
 
         entries.put(
                 "application.yml",
-                "debug: true\n"
+                "debug: false\n"
         );
 
         entries.put(
@@ -251,6 +251,121 @@ class AnalysisExecutionServiceTest {
         assertThat(finding.getStatusUpdatedAt())
                 .isNotNull();
 
+    }
+
+    @Test
+    void shouldDetectEnabledDebugConfiguration()
+            throws IOException {
+        User owner = createUser();
+        Project project = createProject(owner);
+
+        Map<String, String> entries =
+                new LinkedHashMap<>();
+
+        entries.put(
+                "application.yml",
+                """
+                debug: true
+                """
+        );
+
+        UploadedAnalysis uploaded =
+                uploadAnalysisService.upload(
+                        owner.getId(),
+                        project.getId(),
+                        multipartFile(
+                                createZip(entries)
+                        )
+                );
+
+        AnalysisState result =
+                executionService.execute(
+                        uploaded.id()
+                );
+
+        assertThat(result.status())
+                .isEqualTo(
+                        AnalysisStatus.COMPLETED
+                );
+
+        assertThat(result.filesScanned())
+                .isEqualTo(1);
+
+        assertThat(result.linesScanned())
+                .isEqualTo(1L);
+
+        assertThat(result.findingsCount())
+                .isEqualTo(1);
+
+        assertThat(result.securityScore())
+                .isEqualTo((short) 89);
+
+        Finding finding =
+                findingRepository
+                        .findAllByAnalysis_IdOrderByCreatedAtAsc(
+                                uploaded.id()
+                        )
+                        .getFirst();
+
+        assertThat(finding.getRuleKey())
+                .isEqualTo(
+                        "CF-SEC-002"
+                );
+
+        assertThat(finding.getRuleVersion())
+                .isEqualTo(
+                        "1.0.0"
+                );
+
+        assertThat(finding.getTitle())
+                .isEqualTo(
+                        "Debug Mode Enabled"
+                );
+
+        assertThat(finding.getCategory())
+                .isEqualTo(
+                        FindingCategory.CONFIGURATION
+                );
+
+        assertThat(finding.getSeverity())
+                .isEqualTo(
+                        Severity.MEDIUM
+                );
+
+        assertThat(finding.getStatus())
+                .isEqualTo(
+                        FindingStatus.OPEN
+                );
+
+        assertThat(finding.getFilePath())
+                .isEqualTo(
+                        "application.yml"
+                );
+
+        assertThat(finding.getStartLine())
+                .isEqualTo(1);
+
+        assertThat(finding.getEndLine())
+                .isEqualTo(1);
+
+        assertThat(finding.getCodeExcerpt())
+                .contains(
+                        "debug: true"
+                );
+
+        assertThat(finding.getDescription())
+                .isNotBlank();
+
+        assertThat(finding.getImpact())
+                .isNotBlank();
+
+        assertThat(finding.getRecommendation())
+                .isNotBlank();
+
+        assertThat(finding.getFingerprint())
+                .matches(
+                        "[0-9a-f]{64}"
+                );
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.codefortress.analysis.engine.SecurityRuleExecutor;
 import com.codefortress.analysis.engine.rules.HardcodedSecretRule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.codefortress.analysis.engine.rules.DebugModeEnabledRule;
 
 import java.util.List;
 
@@ -16,7 +17,8 @@ public class AnalysisEngineConfiguration {
     public SecurityRuleExecutor securityRuleExecutor() {
         return new SecurityRuleExecutor(
                 List.of(
-                        new HardcodedSecretRule()
+                        new HardcodedSecretRule(),
+                        new DebugModeEnabledRule()
                 )
         );
     }

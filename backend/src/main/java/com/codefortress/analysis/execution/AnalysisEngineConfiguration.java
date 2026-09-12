@@ -10,6 +10,7 @@ import com.codefortress.analysis.engine.rules.DebugModeEnabledRule;
 import com.codefortress.analysis.engine.rules.TlsCertificateVerificationDisabledRule;
 import com.codefortress.analysis.engine.rules.PermissiveCorsConfigurationRule;
 import com.codefortress.analysis.engine.rules.SqlInjectionRiskRule;
+import com.codefortress.analysis.engine.rules.WeakCryptographicHashRule;
 
 import java.util.List;
 
@@ -24,7 +25,8 @@ public class AnalysisEngineConfiguration {
                         new DebugModeEnabledRule(),
                         new TlsCertificateVerificationDisabledRule(),
                         new PermissiveCorsConfigurationRule(),
-                        new SqlInjectionRiskRule()
+                        new SqlInjectionRiskRule(),
+                        new WeakCryptographicHashRule()
                 )
         );
     }

@@ -719,6 +719,129 @@ class AnalysisExecutionServiceTest {
     }
 
     @Test
+    void shouldDetectWeakCryptographicHashAlgorithm()
+            throws IOException {
+        User owner = createUser();
+        Project project = createProject(owner);
+
+        Map<String, String> entries =
+                new LinkedHashMap<>();
+
+        entries.put(
+                "src/HashService.java",
+                """
+                class HashService {
+                    Object hash(String value) throws Exception {
+                        var digest = java.security.MessageDigest.getInstance("MD5");
+                        return digest;
+                    }
+                }
+                """
+        );
+
+        UploadedAnalysis uploaded =
+                uploadAnalysisService.upload(
+                        owner.getId(),
+                        project.getId(),
+                        multipartFile(
+                                createZip(entries)
+                        )
+                );
+
+        AnalysisState result =
+                executionService.execute(
+                        uploaded.id()
+                );
+
+        assertThat(result.status())
+                .isEqualTo(
+                        AnalysisStatus.COMPLETED
+                );
+
+        assertThat(result.filesScanned())
+                .isEqualTo(1);
+
+        assertThat(result.linesScanned())
+                .isEqualTo(6L);
+
+        assertThat(result.findingsCount())
+                .isEqualTo(1);
+
+        assertThat(result.securityScore())
+                .isEqualTo((short) 89);
+
+        Finding finding =
+                findingRepository
+                        .findAllByAnalysis_IdOrderByCreatedAtAsc(
+                                uploaded.id()
+                        )
+                        .getFirst();
+
+        assertThat(finding.getRuleKey())
+                .isEqualTo(
+                        "CF-SEC-006"
+                );
+
+        assertThat(finding.getRuleVersion())
+                .isEqualTo(
+                        "1.0.0"
+                );
+
+        assertThat(finding.getTitle())
+                .isEqualTo(
+                        "Weak Cryptographic Hash Algorithm"
+                );
+
+        assertThat(finding.getCategory())
+                .isEqualTo(
+                        FindingCategory.CODE
+                );
+
+        assertThat(finding.getSeverity())
+                .isEqualTo(
+                        Severity.MEDIUM
+                );
+
+        assertThat(finding.getStatus())
+                .isEqualTo(
+                        FindingStatus.OPEN
+                );
+
+        assertThat(finding.getFilePath())
+                .isEqualTo(
+                        "src/HashService.java"
+                );
+
+        assertThat(finding.getStartLine())
+                .isEqualTo(3);
+
+        assertThat(finding.getEndLine())
+                .isEqualTo(3);
+
+        assertThat(finding.getCodeExcerpt())
+                .contains(
+                        "MessageDigest.getInstance"
+                )
+                .contains(
+                        "MD5"
+                );
+
+        assertThat(finding.getDescription())
+                .isNotBlank();
+
+        assertThat(finding.getImpact())
+                .isNotBlank();
+
+        assertThat(finding.getRecommendation())
+                .isNotBlank();
+
+        assertThat(finding.getFingerprint())
+                .matches(
+                        "[0-9a-f]{64}"
+                );
+    }
+
+    @Test
     void shouldFailAnalysisWhenArchiveHasNoFiles()
             throws IOException {
         User owner = createUser();

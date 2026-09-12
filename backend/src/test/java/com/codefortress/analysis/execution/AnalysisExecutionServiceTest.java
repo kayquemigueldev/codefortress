@@ -599,6 +599,126 @@ class AnalysisExecutionServiceTest {
     }
 
     @Test
+    void shouldDetectSqlInjectionRisk()
+            throws IOException {
+        User owner = createUser();
+        Project project = createProject(owner);
+
+        Map<String, String> entries =
+                new LinkedHashMap<>();
+
+        entries.put(
+                "src/UserRepository.java",
+                """
+                class UserRepository {
+                    String findUser(String userId) {
+                        String sql = "SELECT * FROM users WHERE id = " + userId;
+                        return sql;
+                    }
+                }
+                """
+        );
+
+        UploadedAnalysis uploaded =
+                uploadAnalysisService.upload(
+                        owner.getId(),
+                        project.getId(),
+                        multipartFile(
+                                createZip(entries)
+                        )
+                );
+
+        AnalysisState result =
+                executionService.execute(
+                        uploaded.id()
+                );
+
+        assertThat(result.status())
+                .isEqualTo(
+                        AnalysisStatus.COMPLETED
+                );
+
+        assertThat(result.filesScanned())
+                .isEqualTo(1);
+
+        assertThat(result.findingsCount())
+                .isEqualTo(1);
+
+        assertThat(result.securityScore())
+                .isEqualTo((short) 74);
+
+        Finding finding =
+                findingRepository
+                        .findAllByAnalysis_IdOrderByCreatedAtAsc(
+                                uploaded.id()
+                        )
+                        .getFirst();
+
+        assertThat(finding.getRuleKey())
+                .isEqualTo(
+                        "CF-SEC-005"
+                );
+
+        assertThat(finding.getRuleVersion())
+                .isEqualTo(
+                        "1.0.0"
+                );
+
+        assertThat(finding.getTitle())
+                .isEqualTo(
+                        "SQL Injection Risk"
+                );
+
+        assertThat(finding.getCategory())
+                .isEqualTo(
+                        FindingCategory.CODE
+                );
+
+        assertThat(finding.getSeverity())
+                .isEqualTo(
+                        Severity.HIGH
+                );
+
+        assertThat(finding.getStatus())
+                .isEqualTo(
+                        FindingStatus.OPEN
+                );
+
+        assertThat(finding.getFilePath())
+                .isEqualTo(
+                        "src/UserRepository.java"
+                );
+
+        assertThat(finding.getStartLine())
+                .isEqualTo(3);
+
+        assertThat(finding.getEndLine())
+                .isEqualTo(3);
+
+        assertThat(finding.getCodeExcerpt())
+                .contains(
+                        "SELECT"
+                )
+                .contains(
+                        "userId"
+                );
+
+        assertThat(finding.getDescription())
+                .isNotBlank();
+
+        assertThat(finding.getImpact())
+                .isNotBlank();
+
+        assertThat(finding.getRecommendation())
+                .isNotBlank();
+
+        assertThat(finding.getFingerprint())
+                .matches(
+                        "[0-9a-f]{64}"
+                );
+    }
+
+    @Test
     void shouldFailAnalysisWhenArchiveHasNoFiles()
             throws IOException {
         User owner = createUser();

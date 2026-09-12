@@ -10,6 +10,7 @@ import com.codefortress.analysis.engine.rules.PermissiveCorsConfigurationRule;
 import com.codefortress.analysis.engine.rules.SqlInjectionRiskRule;
 import com.codefortress.analysis.engine.rules.WeakCryptographicHashRule;
 import com.codefortress.analysis.engine.rules.SensitiveInformationExposureRule;
+import com.codefortress.analysis.engine.rules.ExposedManagementEndpointsRule;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 
@@ -28,7 +29,8 @@ public class AnalysisEngineConfiguration {
                         new PermissiveCorsConfigurationRule(),
                         new SqlInjectionRiskRule(),
                         new WeakCryptographicHashRule(),
-                        new SensitiveInformationExposureRule()
+                        new SensitiveInformationExposureRule(),
+                        new ExposedManagementEndpointsRule()
                 )
         );
     }

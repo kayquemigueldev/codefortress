@@ -4,13 +4,14 @@ import com.codefortress.analysis.engine.FindingFactory;
 import com.codefortress.analysis.engine.FindingFingerprintGenerator;
 import com.codefortress.analysis.engine.SecurityRuleExecutor;
 import com.codefortress.analysis.engine.rules.HardcodedSecretRule;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import com.codefortress.analysis.engine.rules.DebugModeEnabledRule;
 import com.codefortress.analysis.engine.rules.TlsCertificateVerificationDisabledRule;
 import com.codefortress.analysis.engine.rules.PermissiveCorsConfigurationRule;
 import com.codefortress.analysis.engine.rules.SqlInjectionRiskRule;
 import com.codefortress.analysis.engine.rules.WeakCryptographicHashRule;
+import com.codefortress.analysis.engine.rules.SensitiveInformationExposureRule;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
 
 import java.util.List;
 
@@ -26,7 +27,8 @@ public class AnalysisEngineConfiguration {
                         new TlsCertificateVerificationDisabledRule(),
                         new PermissiveCorsConfigurationRule(),
                         new SqlInjectionRiskRule(),
-                        new WeakCryptographicHashRule()
+                        new WeakCryptographicHashRule(),
+                        new SensitiveInformationExposureRule()
                 )
         );
     }

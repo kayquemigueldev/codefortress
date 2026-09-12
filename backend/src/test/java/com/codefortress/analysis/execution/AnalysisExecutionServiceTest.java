@@ -842,6 +842,128 @@ class AnalysisExecutionServiceTest {
     }
 
     @Test
+    void shouldDetectSensitiveInformationExposure()
+            throws IOException {
+        User owner = createUser();
+        Project project = createProject(owner);
+
+        Map<String, String> entries =
+                new LinkedHashMap<>();
+
+        entries.put(
+                "src/AuthService.java",
+                """
+                class AuthService {
+                    void authenticate(String password) {
+                        log.info("Password: {}", password);
+                    }
+                }
+                """
+        );
+
+        UploadedAnalysis uploaded =
+                uploadAnalysisService.upload(
+                        owner.getId(),
+                        project.getId(),
+                        multipartFile(
+                                createZip(entries)
+                        )
+                );
+
+        AnalysisState result =
+                executionService.execute(
+                        uploaded.id()
+                );
+
+        assertThat(result.status())
+                .isEqualTo(
+                        AnalysisStatus.COMPLETED
+                );
+
+        assertThat(result.filesScanned())
+                .isEqualTo(1);
+
+        assertThat(result.linesScanned())
+                .isEqualTo(5L);
+
+        assertThat(result.findingsCount())
+                .isEqualTo(1);
+
+        assertThat(result.securityScore())
+                .isEqualTo((short) 74);
+
+        Finding finding =
+                findingRepository
+                        .findAllByAnalysis_IdOrderByCreatedAtAsc(
+                                uploaded.id()
+                        )
+                        .getFirst();
+
+        assertThat(finding.getRuleKey())
+                .isEqualTo(
+                        "CF-SEC-007"
+                );
+
+        assertThat(finding.getRuleVersion())
+                .isEqualTo(
+                        "1.0.0"
+                );
+
+        assertThat(finding.getTitle())
+                .isEqualTo(
+                        "Sensitive Information Exposure"
+                );
+
+        assertThat(finding.getCategory())
+                .isEqualTo(
+                        FindingCategory.CODE
+                );
+
+        assertThat(finding.getSeverity())
+                .isEqualTo(
+                        Severity.HIGH
+                );
+
+        assertThat(finding.getStatus())
+                .isEqualTo(
+                        FindingStatus.OPEN
+                );
+
+        assertThat(finding.getFilePath())
+                .isEqualTo(
+                        "src/AuthService.java"
+                );
+
+        assertThat(finding.getStartLine())
+                .isEqualTo(3);
+
+        assertThat(finding.getEndLine())
+                .isEqualTo(3);
+
+        assertThat(finding.getCodeExcerpt())
+                .contains(
+                        "log.info"
+                )
+                .contains(
+                        "password"
+                );
+
+        assertThat(finding.getDescription())
+                .isNotBlank();
+
+        assertThat(finding.getImpact())
+                .isNotBlank();
+
+        assertThat(finding.getRecommendation())
+                .isNotBlank();
+
+        assertThat(finding.getFingerprint())
+                .matches(
+                        "[0-9a-f]{64}"
+                );
+    }
+
+    @Test
     void shouldFailAnalysisWhenArchiveHasNoFiles()
             throws IOException {
         User owner = createUser();

@@ -27,6 +27,7 @@ import '../styles/project-details-v2.css'
 import '../styles/analyses-v2.css'
 import '../styles/findings-v2.css'
 import '../styles/project-form-v2.css'
+import '../styles/security-rules-v2.css'
 import '../styles/auth.css'
 import '../styles/security-rules.css'
 

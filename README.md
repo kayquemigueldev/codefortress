@@ -2,6 +2,16 @@
 
 [English](README.md) | [Português](README.pt-BR.md)
 
+![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1.1-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Flyway](https://img.shields.io/badge/Flyway-Migrations-CC0200?style=for-the-badge)
+![Maven](https://img.shields.io/badge/Maven-Build-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)
+
+
 CodeFortress is a full-stack static application security analysis platform designed to identify security risks in source code and configuration files.
 
 It allows developers to organize projects, upload source code archives, execute asynchronous security analyses, review detected findings, track security scores, and manage the remediation workflow through a modern web interface.

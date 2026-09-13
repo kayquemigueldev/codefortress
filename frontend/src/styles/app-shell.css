@@ -293,7 +293,7 @@ max-width: 520px
     .app-navigation {
         width: 100%;
         grid-template-columns:
-      repeat(2, 1fr);
+      repeat(3, 1fr);
         margin: 0;
     }
 

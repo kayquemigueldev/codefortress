@@ -61,6 +61,18 @@ export function AppShell() {
 
                             Projects
                         </NavLink>
+                        <NavLink
+                            className={
+                                navigationClassName
+                            }
+                            to="/app/security-rules"
+                        >
+    <span className="app-navigation__icon">
+        R
+    </span>
+
+                            Security Rules
+                        </NavLink>
                     </nav>
                 </div>
 

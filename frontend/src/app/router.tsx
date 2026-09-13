@@ -15,6 +15,8 @@ import { AppShell } from '../components/layout/AppShell'
 import { ProjectAnalysesPage } from '../features/analyses/ProjectAnalysesPage'
 import { AnalysisFindingsPage } from '../features/findings/AnalysisFindingsPage'
 import { EditProjectPage } from '../features/projects/EditProjectPage'
+import { SecurityRulesPage } from '../features/security-rules/SecurityRulesPage'
+import '../styles/security-rules.css'
 
 import '../styles/findings.css'
 import '../styles/analyses.css'
@@ -88,6 +90,12 @@ export function AppRouter() {
                 <Route
                     element={<AppShell />}
                 >
+                    <Route
+                        path="/app/security-rules"
+                        element={
+                            <SecurityRulesPage />
+                        }
+                    />
                     <Route
                         path="/app/dashboard"
                         element={

@@ -22,6 +22,7 @@ import '../styles/analyses.css'
 import '../styles/app-shell.css'
 import '../styles/dashboard-v2.css'
 import '../styles/projects.css'
+import '../styles/projects-v2.css'
 import '../styles/auth.css'
 import '../styles/security-rules.css'
 

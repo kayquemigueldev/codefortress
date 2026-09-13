@@ -5,19 +5,19 @@ import {
     Link,
 } from 'react-router'
 
-import { useAuth } from '../../lib/auth/useAuth'
-
 import {
     getDashboardOverview,
 } from './dashboard-api'
+
+import {
+    securityRules,
+} from '../security-rules/security-rules-data'
 
 import type {
     DashboardLatestAnalysis,
 } from './dashboard-types'
 
 export function DashboardPage() {
-    const { user } = useAuth()
-
     const dashboardQuery = useQuery({
         queryKey: ['dashboard'],
         queryFn: getDashboardOverview,
@@ -25,14 +25,14 @@ export function DashboardPage() {
 
     if (dashboardQuery.isPending) {
         return (
-            <main className="dashboard-page">
-                <div className="dashboard-container">
-                    <p className="projects-eyebrow">
-                        Workspace
+            <main className="dashboard-v2">
+                <div className="dashboard-v2__container">
+                    <p className="dashboard-v2__eyebrow">
+                        Dashboard
                     </p>
 
-                    <h1 className="dashboard-state-title">
-                        Loading dashboard...
+                    <h1 className="dashboard-v2__state-title">
+                        Loading security overview...
                     </h1>
                 </div>
             </main>
@@ -41,23 +41,23 @@ export function DashboardPage() {
 
     if (dashboardQuery.isError) {
         return (
-            <main className="dashboard-page">
-                <div className="dashboard-container">
-                    <p className="projects-eyebrow">
-                        Workspace
+            <main className="dashboard-v2">
+                <div className="dashboard-v2__container">
+                    <p className="dashboard-v2__eyebrow">
+                        Dashboard
                     </p>
 
-                    <h1 className="dashboard-state-title">
-                        Unable to load dashboard.
+                    <h1 className="dashboard-v2__state-title">
+                        Unable to load security overview.
                     </h1>
 
-                    <p className="dashboard-state-description">
-                        Something went wrong while
-                        loading your security overview.
+                    <p className="dashboard-v2__state-description">
+                        Something went wrong while loading
+                        your workspace security data.
                     </p>
 
                     <button
-                        className="projects-primary-button"
+                        className="dashboard-v2__primary-action"
                         type="button"
                         onClick={() => {
                             void dashboardQuery.refetch()
@@ -76,290 +76,328 @@ export function DashboardPage() {
     const latest =
         overview.latestAnalysis
 
+    const activeRules =
+        securityRules.filter(
+            (rule) => rule.active,
+        ).length
+
     const highRiskFindings =
         overview.criticalOpenFindings
         + overview.highOpenFindings
 
-    const postureTotal =
+    const severityTotal =
         overview.criticalOpenFindings
         + overview.highOpenFindings
         + overview.mediumOpenFindings
         + overview.lowOpenFindings
 
     return (
-        <main className="dashboard-page">
-            <div className="dashboard-container">
-                <header className="dashboard-header">
+        <main className="dashboard-v2">
+            <div className="dashboard-v2__container">
+                <header className="dashboard-v2__header">
                     <div>
-                        <p className="projects-eyebrow">
-                            Workspace overview
+                        <p className="dashboard-v2__eyebrow">
+                            Dashboard
                         </p>
 
                         <h1>
-                            Welcome back,
-                            {' '}
-                            {user?.displayName}.
+                            Security Overview
                         </h1>
 
-                        <p>
-                            Monitor the current security
-                            posture of your projects and
-                            review recent analysis activity.
+                        <p className="dashboard-v2__subtitle">
+                            Monitor your workspace security
+                            posture and track the results of
+                            your analyses.
                         </p>
                     </div>
 
                     <Link
-                        className="projects-primary-button"
-                        to="/app/projects/new"
+                        className="dashboard-v2__primary-action"
+                        to="/app/projects"
                     >
-                        New project
+                        <PlayIcon />
+
+                        Run analysis
                     </Link>
                 </header>
 
-                <section className="dashboard-metrics">
-                    <DashboardMetric
-                        label="Average score"
-                        value={
+                <section className="dashboard-v2__hero-grid">
+                    <SecurityScoreCard
+                        score={
                             overview.averageSecurityScore
-                            ?? '—'
                         }
-                        description={
-                            overview.averageSecurityScore
-                            === null
-                                ? 'No completed analyses yet'
-                                : 'Latest completed score per project'
-                        }
-                        score
-                    />
-
-                    <DashboardMetric
-                        label="Active projects"
-                        value={
-                            overview.activeProjects
-                        }
-                        description="Codebases currently monitored"
-                    />
-
-                    <DashboardMetric
-                        label="Open findings"
-                        value={
+                        activeRules={activeRules}
+                        openFindings={
                             overview.openFindings
                         }
-                        description="Issues requiring review"
-                    />
-
-                    <DashboardMetric
-                        label="High risk"
-                        value={
+                        highRiskFindings={
                             highRiskFindings
                         }
-                        description="Critical and high severity findings"
+                        activeProjects={
+                            overview.activeProjects
+                        }
+                    />
+
+                    <div className="dashboard-v2__metric-grid">
+                        <MetricCard
+                            icon={<ProjectsIcon />}
+                            label="Projects"
+                            value={
+                                overview.activeProjects
+                            }
+                            description="Active projects"
+                            tone="green"
+                        />
+
+                        <MetricCard
+                            icon={<RulesIcon />}
+                            label="Rules"
+                            value={activeRules}
+                            description="Active security rules"
+                            tone="blue"
+                        />
+
+                        <MetricCard
+                            icon={<FindingsIcon />}
+                            label="Open findings"
+                            value={
+                                overview.openFindings
+                            }
+                            description="Require review"
+                            tone="amber"
+                        />
+
+                        <MetricCard
+                            icon={<RiskIcon />}
+                            label="High risk"
+                            value={
+                                highRiskFindings
+                            }
+                            description="Critical and high"
+                            tone="red"
+                        />
+                    </div>
+                </section>
+
+                <section className="dashboard-v2__insights-grid">
+                    <SeverityCard
                         critical={
-                            highRiskFindings > 0
+                            overview
+                                .criticalOpenFindings
+                        }
+                        high={
+                            overview
+                                .highOpenFindings
+                        }
+                        medium={
+                            overview
+                                .mediumOpenFindings
+                        }
+                        low={
+                            overview
+                                .lowOpenFindings
+                        }
+                        total={severityTotal}
+                    />
+
+                    <ScoreHistoryCard
+                        analyses={
+                            overview.recentAnalyses
                         }
                     />
                 </section>
 
-                <section className="dashboard-overview-grid">
-                    <article className="dashboard-panel dashboard-posture">
-                        <div className="dashboard-panel__heading">
-                            <div>
-                                <p className="projects-eyebrow">
-                                    Security posture
-                                </p>
+                <section className="dashboard-v2__activity-grid">
+                    <RecentAnalysesCard
+                        analyses={
+                            overview.recentAnalyses
+                        }
+                    />
 
-                                <h2>
-                                    Open findings by severity
-                                </h2>
-                            </div>
+                    <div className="dashboard-v2__side-stack">
+                        <LatestAnalysisCard
+                            analysis={latest}
+                        />
 
-                            <span className="dashboard-panel-total">
-                                {overview.openFindings}
-                                {' '}
-                                open
-                            </span>
-                        </div>
-
-                        <div className="dashboard-posture-list">
-                            <PostureRow
-                                label="Critical"
-                                value={
-                                    overview
-                                        .criticalOpenFindings
-                                }
-                                total={postureTotal}
-                                severity="critical"
-                            />
-
-                            <PostureRow
-                                label="High"
-                                value={
-                                    overview
-                                        .highOpenFindings
-                                }
-                                total={postureTotal}
-                                severity="high"
-                            />
-
-                            <PostureRow
-                                label="Medium"
-                                value={
-                                    overview
-                                        .mediumOpenFindings
-                                }
-                                total={postureTotal}
-                                severity="medium"
-                            />
-
-                            <PostureRow
-                                label="Low"
-                                value={
-                                    overview
-                                        .lowOpenFindings
-                                }
-                                total={postureTotal}
-                                severity="low"
-                            />
-                        </div>
-
-                        {postureTotal === 0 && (
-                            <p className="dashboard-posture-empty">
-                                No open security findings.
-                            </p>
-                        )}
-                    </article>
-
-                    <article className="dashboard-panel dashboard-latest-panel">
-                        <div className="dashboard-panel__heading">
-                            <div>
-                                <p className="projects-eyebrow">
-                                    Latest activity
-                                </p>
-
-                                <h2>
-                                    Latest analysis
-                                </h2>
-                            </div>
-
-                            <Link to="/app/projects">
-                                View projects →
-                            </Link>
-                        </div>
-
-                        {!latest ? (
-                            <div className="dashboard-latest-empty">
-                                <h3>
-                                    No analyses yet.
-                                </h3>
-
-                                <p>
-                                    Run your first security
-                                    analysis to populate this
-                                    workspace.
-                                </p>
-
-                                <Link
-                                    to="/app/projects"
-                                >
-                                    View projects →
-                                </Link>
-                            </div>
-                        ) : (
-                            <LatestAnalysisSummary
-                                analysis={latest}
-                            />
-                        )}
-                    </article>
-                </section>
-
-                <section className="dashboard-recent-section">
-                    <div className="dashboard-section-heading">
-                        <div>
-                            <p className="projects-eyebrow">
-                                Analysis activity
-                            </p>
-
-                            <h2>
-                                Recent analyses
-                            </h2>
-                        </div>
-
-                        <span className="dashboard-section-caption">
-                            Latest 5 analyses across
-                            active projects
-                        </span>
+                        <EngineCard
+                            activeRules={activeRules}
+                            latest={latest}
+                        />
                     </div>
-
-                    {overview.recentAnalyses.length === 0 ? (
-                        <div className="dashboard-empty">
-                            <div>
-                                <h3>
-                                    No recent analyses.
-                                </h3>
-
-                                <p>
-                                    Your latest project
-                                    analyses will appear here.
-                                </p>
-                            </div>
-
-                            <Link
-                                className="projects-primary-button"
-                                to="/app/projects"
-                            >
-                                View projects
-                            </Link>
-                        </div>
-                    ) : (
-                        <div className="dashboard-recent-list">
-                            {overview.recentAnalyses.map(
-                                (analysis) => (
-                                    <RecentAnalysisRow
-                                        key={analysis.id}
-                                        analysis={analysis}
-                                    />
-                                ),
-                            )}
-                        </div>
-                    )}
                 </section>
+
             </div>
         </main>
     )
 }
 
-function DashboardMetric({
-                             label,
-                             value,
-                             description,
-                             score = false,
-                             critical = false,
-                         }: {
-    label: string
-    value: number | string
-    description: string
-    score?: boolean
-    critical?: boolean
+function SecurityScoreCard({
+                               score,
+                               activeRules,
+                               openFindings,
+                               highRiskFindings,
+                               activeProjects,
+                           }: {
+    score: number | null
+    activeRules: number
+    openFindings: number
+    highRiskFindings: number
+    activeProjects: number
 }) {
-    const valueClassName = [
-        'dashboard-metric__value',
-        score
-            ? 'dashboard-metric__value--score'
-            : '',
-        critical
-            ? 'dashboard-metric__value--critical'
-            : '',
-    ]
-        .filter(Boolean)
-        .join(' ')
+    const scoreValue =
+        score ?? 0
 
     return (
-        <article className="dashboard-metric">
-            <span className="dashboard-metric__label">
+        <article className="security-score-card">
+            <div className="security-score-card__heading">
+                <span>
+                    Security score
+                </span>
+
+                <InfoIcon />
+            </div>
+
+            <div className="security-score-card__content">
+                <div
+                    className="security-score-ring"
+                    style={{
+                        '--score':
+                            `${scoreValue * 3.6}deg`,
+                    } as React.CSSProperties}
+                >
+                    <div className="security-score-ring__inner">
+                        <strong>
+                            {score ?? '—'}
+                        </strong>
+
+                        <span>
+                            Workspace score
+                        </span>
+                    </div>
+                </div>
+
+                <div className="security-score-card__summary">
+                    <div>
+                        <h2>
+                            Your current security posture
+                        </h2>
+
+                        <p>
+                            CodeFortress is monitoring your
+                            projects with active static
+                            analysis rules and highlighting
+                            findings that require review.
+                        </p>
+                    </div>
+
+                    <div className="security-score-card__facts">
+                        <SecurityFact
+                            icon={<ShieldIcon />}
+                            value={activeRules}
+                            label="active security rules"
+                            tone="green"
+                        />
+
+                        <SecurityFact
+                            icon={<FindingsIcon />}
+                            value={openFindings}
+                            label="open findings"
+                            tone="amber"
+                        />
+
+                        <SecurityFact
+                            icon={<RiskIcon />}
+                            value={highRiskFindings}
+                            label="high risk findings"
+                            tone="red"
+                        />
+
+                        <SecurityFact
+                            icon={<ProjectsIcon />}
+                            value={activeProjects}
+                            label={
+                                activeProjects === 1
+                                    ? 'active project'
+                                    : 'active projects'
+                            }
+                            tone="neutral"
+                        />
+                    </div>
+                </div>
+            </div>
+        </article>
+    )
+}
+
+function SecurityFact({
+                          icon,
+                          value,
+                          label,
+                          tone,
+                      }: {
+    icon: React.ReactNode
+    value: number
+    label: string
+    tone:
+        | 'green'
+        | 'amber'
+        | 'red'
+        | 'neutral'
+}) {
+    return (
+        <div className="security-score-fact">
+            <span
+                className={
+                    `security-score-fact__icon security-score-fact__icon--${tone}`
+                }
+            >
+                {icon}
+            </span>
+
+            <p>
+                <strong>
+                    {value}
+                </strong>
+
+                {' '}
+                {label}
+            </p>
+        </div>
+    )
+}
+
+function MetricCard({
+                        icon,
+                        label,
+                        value,
+                        description,
+                        tone,
+                    }: {
+    icon: React.ReactNode
+    label: string
+    value: number
+    description: string
+    tone:
+        | 'green'
+        | 'blue'
+        | 'amber'
+        | 'red'
+}) {
+    return (
+        <article
+            className={
+                `dashboard-v2-metric dashboard-v2-metric--${tone}`
+            }
+        >
+            <span className="dashboard-v2-metric__icon">
+                {icon}
+            </span>
+
+            <span className="dashboard-v2-metric__label">
                 {label}
             </span>
 
-            <strong className={valueClassName}>
+            <strong>
                 {value}
             </strong>
 
@@ -370,12 +408,113 @@ function DashboardMetric({
     )
 }
 
-function PostureRow({
-                        label,
-                        value,
-                        total,
-                        severity,
-                    }: {
+function SeverityCard({
+                          critical,
+                          high,
+                          medium,
+                          low,
+                          total,
+                      }: {
+    critical: number
+    high: number
+    medium: number
+    low: number
+    total: number
+}) {
+    const criticalPercent =
+        percentage(critical, total)
+
+    const highPercent =
+        percentage(high, total)
+
+    const mediumPercent =
+        percentage(medium, total)
+
+    const criticalEnd =
+        criticalPercent
+
+    const highEnd =
+        criticalPercent + highPercent
+
+    const mediumEnd =
+        highEnd + mediumPercent
+
+    const donutBackground =
+        total === 0
+            ? 'var(--cf-surface-raised)'
+            : `conic-gradient(
+                var(--cf-critical) 0% ${criticalEnd}%,
+                var(--cf-high) ${criticalEnd}% ${highEnd}%,
+                var(--cf-medium) ${highEnd}% ${mediumEnd}%,
+                var(--cf-low) ${mediumEnd}% 100%
+            )`
+
+    return (
+        <article className="dashboard-v2-card severity-card">
+            <CardHeader
+                title="Findings by severity"
+                eyebrow="Risk distribution"
+            />
+
+            <div className="severity-card__content">
+                <div
+                    className="severity-donut"
+                    style={{
+                        background:
+                        donutBackground,
+                    }}
+                >
+                    <div className="severity-donut__inner">
+                        <strong>
+                            {total}
+                        </strong>
+
+                        <span>
+                            findings
+                        </span>
+                    </div>
+                </div>
+
+                <div className="severity-legend">
+                    <SeverityRow
+                        label="Critical"
+                        value={critical}
+                        total={total}
+                        severity="critical"
+                    />
+
+                    <SeverityRow
+                        label="High"
+                        value={high}
+                        total={total}
+                        severity="high"
+                    />
+
+                    <SeverityRow
+                        label="Medium"
+                        value={medium}
+                        total={total}
+                        severity="medium"
+                    />
+
+                    <SeverityRow
+                        label="Low"
+                        value={low}
+                        total={total}
+                        severity="low"
+                    />
+                </div>
+            </div>
+        </article>
+    )
+}
+
+function SeverityRow({
+                         label,
+                         value,
+                         total,
+                         severity,
+                     }: {
     label: string
     value: number
     total: number
@@ -385,196 +524,616 @@ function PostureRow({
         | 'medium'
         | 'low'
 }) {
-    const percentage =
-        total === 0
-            ? 0
-            : (value / total) * 100
-
     return (
-        <div className="dashboard-posture-row">
-            <div className="dashboard-posture-row__header">
+        <div className="severity-row">
+            <div>
+                <span
+                    className={
+                        `severity-row__dot severity-row__dot--${severity}`
+                    }
+                />
+
                 <span>
                     {label}
                 </span>
-
-                <strong>
-                    {value}
-                </strong>
             </div>
 
-            <div className="dashboard-posture-track">
-                <span
-                    className={
-                        `dashboard-posture-fill dashboard-posture-fill--${severity}`
-                    }
-                    style={{
-                        width: `${percentage}%`,
-                    }}
-                />
-            </div>
+            <strong>
+                {value}
+            </strong>
+
+            <span>
+                {Math.round(
+                    percentage(
+                        value,
+                        total,
+                    ),
+                )}
+                %
+            </span>
         </div>
     )
 }
 
-function LatestAnalysisSummary({
-                                   analysis,
-                               }: {
-    analysis: DashboardLatestAnalysis
+function ScoreHistoryCard({
+                              analyses,
+                          }: {
+    analyses: DashboardLatestAnalysis[]
 }) {
+    const scoredAnalyses =
+        analyses
+            .filter(
+                (analysis) =>
+                    analysis.status === 'COMPLETED'
+                    && analysis.securityScore !== null,
+            )
+            .slice()
+            .reverse()
+
+    const chartWidth = 700
+    const chartHeight = 240
+
+    const paddingLeft = 46
+    const paddingRight = 24
+    const paddingTop = 24
+    const paddingBottom = 42
+
+    const usableWidth =
+        chartWidth
+        - paddingLeft
+        - paddingRight
+
+    const usableHeight =
+        chartHeight
+        - paddingTop
+        - paddingBottom
+
+    const points =
+        scoredAnalyses.map(
+            (analysis, index) => {
+                const score =
+                    analysis.securityScore
+                    ?? 0
+
+                const x =
+                    scoredAnalyses.length === 1
+                        ? paddingLeft
+                        + usableWidth / 2
+                        : paddingLeft
+                        + (
+                            index
+                            / (
+                                scoredAnalyses.length
+                                - 1
+                            )
+                        )
+                        * usableWidth
+
+                const y =
+                    paddingTop
+                    + (
+                        (100 - score)
+                        / 100
+                    )
+                    * usableHeight
+
+                return {
+                    analysis,
+                    x,
+                    y,
+                    score,
+                }
+            },
+        )
+
+    const polylinePoints =
+        points
+            .map(
+                (point) =>
+                    `${point.x},${point.y}`,
+            )
+            .join(' ')
+
     return (
-        <div className="dashboard-latest-summary">
-            <div className="dashboard-latest-summary__header">
-                <div>
-                    <p className="dashboard-analysis-sequence">
-                        Analysis #
-                        {analysis.sequenceNumber}
-                    </p>
+        <article className="dashboard-v2-card score-history-card">
+            <CardHeader
+                title="Security score history"
+                eyebrow="Score trend"
+            />
+
+            {points.length === 0 ? (
+                <div className="score-history-card__empty">
+                    <ShieldIcon />
 
                     <h3>
-                        {analysis.projectName}
+                        No score history yet
                     </h3>
 
-                    <span>
-                        {analysis.sourceFilename}
-                    </span>
+                    <p>
+                        Completed analyses with a
+                        security score will appear
+                        here.
+                    </p>
                 </div>
-
-                <span
-                    className={
-                        `dashboard-analysis-status dashboard-analysis-status--${analysis.status.toLowerCase()}`
-                    }
-                >
-                    {analysis.status}
-                </span>
-            </div>
-
-            <div className="dashboard-latest-summary__score">
-                <div>
-                    <span>
-                        Security score
-                    </span>
-
-                    <strong>
-                        {analysis.securityScore
-                            ?? '—'}
-                    </strong>
-                </div>
-
-                <div>
-                    <span>
-                        Findings
-                    </span>
-
-                    <strong>
-                        {analysis.findingsCount
-                            ?? '—'}
-                    </strong>
-                </div>
-            </div>
-
-            <p className="dashboard-latest-summary__date">
-                Created
-                {' '}
-                {formatDate(
-                    analysis.createdAt,
-                )}
-            </p>
-
-            <div className="dashboard-latest-summary__links">
-                <Link
-                    to={
-                        `/app/projects/${analysis.projectId}`
-                    }
-                >
-                    Project overview →
-                </Link>
-
-                {analysis.status === 'COMPLETED' && (
-                    <Link
-                        to={
-                            `/app/projects/${analysis.projectId}/analyses/${analysis.id}/findings`
+            ) : (
+                <div className="score-history-chart">
+                    <svg
+                        role="img"
+                        aria-label="Security scores from recent completed analyses"
+                        viewBox={
+                            `0 0 ${chartWidth} ${chartHeight}`
                         }
                     >
-                        View findings →
-                    </Link>
-                )}
-            </div>
-        </div>
+                        {[100, 75, 50, 25, 0].map(
+                            (value) => {
+                                const y =
+                                    paddingTop
+                                    + (
+                                        (100 - value)
+                                        / 100
+                                    )
+                                    * usableHeight
+
+                                return (
+                                    <g key={value}>
+                                        <line
+                                            className="score-history-grid-line"
+                                            x1={paddingLeft}
+                                            x2={
+                                                chartWidth
+                                                - paddingRight
+                                            }
+                                            y1={y}
+                                            y2={y}
+                                        />
+
+                                        <text
+                                            className="score-history-axis-label"
+                                            x="8"
+                                            y={y + 4}
+                                        >
+                                            {value}
+                                        </text>
+                                    </g>
+                                )
+                            },
+                        )}
+
+                        {points.length > 1 && (
+                            <polyline
+                                className="score-history-line"
+                                fill="none"
+                                points={polylinePoints}
+                            />
+                        )}
+
+                        {points.map(
+                            (point) => (
+                                <g
+                                    key={
+                                        point.analysis.id
+                                    }
+                                >
+                                    <circle
+                                        className="score-history-point-glow"
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="9"
+                                    />
+
+                                    <circle
+                                        className="score-history-point"
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4.5"
+                                    />
+
+                                    <text
+                                        className="score-history-score-label"
+                                        textAnchor="middle"
+                                        x={point.x}
+                                        y={point.y - 14}
+                                    >
+                                        {point.score}
+                                    </text>
+
+                                    <text
+                                        className="score-history-analysis-label"
+                                        textAnchor="middle"
+                                        x={point.x}
+                                        y={
+                                            chartHeight
+                                            - 12
+                                        }
+                                    >
+                                        #
+                                        {
+                                            point
+                                                .analysis
+                                                .sequenceNumber
+                                        }
+                                    </text>
+                                </g>
+                            ),
+                        )}
+                    </svg>
+                </div>
+            )}
+        </article>
     )
 }
 
-function RecentAnalysisRow({
-                               analysis,
-                           }: {
-    analysis: DashboardLatestAnalysis
+function LatestAnalysisCard({
+                                analysis,
+                            }: {
+    analysis:
+        | DashboardLatestAnalysis
+        | null
 }) {
     return (
-        <article className="dashboard-recent-row">
-            <div className="dashboard-recent-row__identity">
-                <span>
-                    Analysis #
-                    {analysis.sequenceNumber}
-                </span>
+        <article className="dashboard-v2-card latest-analysis-card">
+            <CardHeader
+                title="Latest analysis"
+                eyebrow="Recent scan"
+            />
 
-                <strong>
-                    {analysis.projectName}
-                </strong>
+            {!analysis ? (
+                <div className="latest-analysis-card__empty">
+                    <ShieldIcon />
 
-                <p>
-                    {analysis.sourceFilename}
-                </p>
-            </div>
+                    <h3>
+                        No analyses yet
+                    </h3>
 
-            <div className="dashboard-recent-row__score">
-                <span>
-                    Score
-                </span>
+                    <p>
+                        Run your first analysis to see
+                        security results here.
+                    </p>
 
-                <strong>
-                    {analysis.securityScore
-                        ?? '—'}
-                </strong>
-            </div>
+                    <Link to="/app/projects">
+                        View projects →
+                    </Link>
+                </div>
+            ) : (
+                <div className="latest-analysis-card__content">
+                    <div className="latest-analysis-card__top">
+                        <div>
+                            <span>
+                                Analysis #
+                                {analysis.sequenceNumber}
+                            </span>
 
-            <div className="dashboard-recent-row__findings">
-                <span>
-                    Findings
-                </span>
+                            <h3>
+                                {analysis.projectName}
+                            </h3>
 
-                <strong>
-                    {analysis.findingsCount
-                        ?? '—'}
-                </strong>
-            </div>
+                            <p>
+                                {analysis.sourceFilename}
+                            </p>
+                        </div>
 
-            <div className="dashboard-recent-row__status">
-                <span
-                    className={
-                        `dashboard-analysis-status dashboard-analysis-status--${analysis.status.toLowerCase()}`
-                    }
-                >
-                    {analysis.status}
-                </span>
+                        <AnalysisStatus
+                            status={analysis.status}
+                        />
+                    </div>
 
-                <small>
-                    {formatDate(
-                        analysis.createdAt,
+                    <div className="latest-analysis-card__metrics">
+                        <div>
+                            <span>
+                                Security score
+                            </span>
+
+                            <strong>
+                                {analysis.securityScore
+                                    ?? '—'}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>
+                                Findings
+                            </span>
+
+                            <strong>
+                                {analysis.findingsCount
+                                    ?? '—'}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div className="latest-analysis-card__footer">
+                        <span>
+                            {formatDate(
+                                analysis.createdAt,
+                            )}
+                        </span>
+
+                        <div>
+                            <Link
+                                to={
+                                    `/app/projects/${analysis.projectId}`
+                                }
+                            >
+                                Project
+                            </Link>
+
+                            {analysis.status
+                                === 'COMPLETED' && (
+                                    <Link
+                                        to={
+                                            `/app/projects/${analysis.projectId}/analyses/${analysis.id}/findings`
+                                        }
+                                    >
+                                        Findings →
+                                    </Link>
+                                )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </article>
+    )
+}
+
+function RecentAnalysesCard({
+                                analyses,
+                            }: {
+    analyses: DashboardLatestAnalysis[]
+}) {
+    return (
+        <article className="dashboard-v2-card recent-analyses-card">
+            <CardHeader
+                title="Recent analyses"
+                eyebrow="Analysis activity"
+                action={
+                    <Link to="/app/projects">
+                        View projects →
+                    </Link>
+                }
+            />
+
+            {analyses.length === 0 ? (
+                <div className="recent-analyses-card__empty">
+                    No recent analyses.
+                </div>
+            ) : (
+                <div className="recent-analyses-table">
+                    <div className="recent-analyses-table__header">
+                        <span>
+                            Analysis
+                        </span>
+
+                        <span>
+                            Project
+                        </span>
+
+                        <span>
+                            Score
+                        </span>
+
+                        <span>
+                            Findings
+                        </span>
+
+                        <span>
+                            Status
+                        </span>
+
+                        <span>
+                            Date
+                        </span>
+
+                        <span />
+                    </div>
+
+                    {analyses.map(
+                        (analysis) => (
+                            <div
+                                className="recent-analysis-row"
+                                key={analysis.id}
+                            >
+                                <span>
+                                    #
+                                    {
+                                        analysis
+                                            .sequenceNumber
+                                    }
+                                </span>
+
+                                <div>
+                                    <strong>
+                                        {
+                                            analysis
+                                                .projectName
+                                        }
+                                    </strong>
+
+                                    <small>
+                                        {
+                                            analysis
+                                                .sourceFilename
+                                        }
+                                    </small>
+                                </div>
+
+                                <strong className="recent-analysis-row__score">
+                                    {
+                                        analysis
+                                            .securityScore
+                                        ?? '—'
+                                    }
+                                </strong>
+
+                                <span>
+                                    {
+                                        analysis
+                                            .findingsCount
+                                        ?? '—'
+                                    }
+                                </span>
+
+                                <AnalysisStatus
+                                    status={
+                                        analysis.status
+                                    }
+                                />
+
+                                <span>
+                                    {formatShortDate(
+                                        analysis.createdAt,
+                                    )}
+                                </span>
+
+                                <Link
+                                    to={
+                                        analysis.status
+                                        === 'COMPLETED'
+                                            ? `/app/projects/${analysis.projectId}/analyses/${analysis.id}/findings`
+                                            : `/app/projects/${analysis.projectId}/analyses`
+                                    }
+                                >
+                                    →
+                                </Link>
+                            </div>
+                        ),
                     )}
-                </small>
+                </div>
+            )}
+        </article>
+    )
+}
+
+function EngineCard({
+                        activeRules,
+                        latest,
+                    }: {
+    activeRules: number
+    latest:
+        | DashboardLatestAnalysis
+        | null
+}) {
+    return (
+        <article className="dashboard-v2-card engine-card">
+            <CardHeader
+                title="Security Engine"
+                eyebrow="Protection"
+                action={
+                    <Link to="/app/security-rules">
+                        View rules →
+                    </Link>
+                }
+            />
+
+            <div className="engine-card__status">
+                <div className="engine-card__shield">
+                    <ShieldIcon />
+                </div>
+
+                <div>
+                    <span>
+                        Engine status
+                    </span>
+
+                    <strong>
+                        Operational
+                    </strong>
+
+                    <p>
+                        All configured security rules
+                        are active and ready to analyze
+                        supported source files.
+                    </p>
+                </div>
+            </div>
+
+            <div className="engine-card__metrics">
+                <div>
+                    <strong>
+                        {activeRules}
+                    </strong>
+
+                    <span>
+                        Active rules
+                    </span>
+                </div>
+
+                <div>
+                    <strong>
+                        {latest?.sequenceNumber
+                            ?? '—'}
+                    </strong>
+
+                    <span>
+                        Latest analysis
+                    </span>
+                </div>
             </div>
 
             <Link
-                className="dashboard-recent-row__link"
-                to={
-                    analysis.status === 'COMPLETED'
-                        ? `/app/projects/${analysis.projectId}/analyses/${analysis.id}/findings`
-                        : `/app/projects/${analysis.projectId}/analyses`
-                }
+                className="engine-card__action"
+                to="/app/security-rules"
             >
-                View →
+                Explore Security Engine
+
+                <span>
+                    →
+                </span>
             </Link>
         </article>
     )
+}
+
+function CardHeader({
+                        eyebrow,
+                        title,
+                        action,
+                    }: {
+    eyebrow: string
+    title: string
+    action?: React.ReactNode
+}) {
+    return (
+        <header className="dashboard-v2-card__header">
+            <div>
+                <span>
+                    {eyebrow}
+                </span>
+
+                <h2>
+                    {title}
+                </h2>
+            </div>
+
+            {action}
+        </header>
+    )
+}
+
+function AnalysisStatus({
+                            status,
+                        }: {
+    status: DashboardLatestAnalysis['status']
+}) {
+    return (
+        <span
+            className={
+                `dashboard-v2-status dashboard-v2-status--${status.toLowerCase()}`
+            }
+        >
+            {status}
+        </span>
+    )
+}
+
+function percentage(
+    value: number,
+    total: number,
+) {
+    if (total === 0) {
+        return 0
+    }
+
+    return (value / total) * 100
 }
 
 function formatDate(
@@ -588,5 +1147,115 @@ function formatDate(
         },
     ).format(
         new Date(value),
+    )
+}
+
+function formatShortDate(
+    value: string,
+) {
+    return new Intl.DateTimeFormat(
+        'en',
+        {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        },
+    ).format(
+        new Date(value),
+    )
+}
+
+function PlayIcon() {
+    return (
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+        >
+            <path d="m8 5 11 7-11 7Z" />
+        </svg>
+    )
+}
+
+function InfoIcon() {
+    return (
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+        >
+            <circle
+                cx="12"
+                cy="12"
+                r="9"
+            />
+
+            <path d="M12 11v5" />
+            <path d="M12 8h.01" />
+        </svg>
+    )
+}
+
+function ShieldIcon() {
+    return (
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+        >
+            <path d="M12 3 19 6v5c0 4.8-2.8 8.1-7 10-4.2-1.9-7-5.2-7-10V6l7-3Z" />
+            <path d="m9.5 12 1.6 1.6 3.6-3.8" />
+        </svg>
+    )
+}
+
+function ProjectsIcon() {
+    return (
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+        >
+            <path d="M4 7.5h6l1.7 2H20v9.5H4Z" />
+            <path d="M4 7.5V5h6l1.7 2H20v2.5" />
+        </svg>
+    )
+}
+
+function RulesIcon() {
+    return (
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+        >
+            <path d="M7 5h13" />
+            <path d="M7 12h13" />
+            <path d="M7 19h13" />
+            <path d="m3.5 5 1 1 2-2" />
+            <path d="m3.5 12 1 1 2-2" />
+            <path d="m3.5 19 1 1 2-2" />
+        </svg>
+    )
+}
+
+function FindingsIcon() {
+    return (
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+        >
+            <path d="M12 3 4 7v5c0 4.2 2.5 7.2 8 9 5.5-1.8 8-4.8 8-9V7Z" />
+            <path d="M12 8v5" />
+            <path d="M12 16h.01" />
+        </svg>
+    )
+}
+
+function RiskIcon() {
+    return (
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+        >
+            <path d="M12 4 21 20H3Z" />
+            <path d="M12 9v5" />
+            <path d="M12 17h.01" />
+        </svg>
     )
 }

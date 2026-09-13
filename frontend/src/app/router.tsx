@@ -16,13 +16,14 @@ import { ProjectAnalysesPage } from '../features/analyses/ProjectAnalysesPage'
 import { AnalysisFindingsPage } from '../features/findings/AnalysisFindingsPage'
 import { EditProjectPage } from '../features/projects/EditProjectPage'
 import { SecurityRulesPage } from '../features/security-rules/SecurityRulesPage'
-import '../styles/security-rules.css'
 
 import '../styles/findings.css'
 import '../styles/analyses.css'
 import '../styles/app-shell.css'
+import '../styles/dashboard-v2.css'
 import '../styles/projects.css'
 import '../styles/auth.css'
+import '../styles/security-rules.css'
 
 function HomePage() {
     return (

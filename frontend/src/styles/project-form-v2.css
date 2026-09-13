@@ -1,0 +1,553 @@
+/* =========================================================
+   CODEFORTRESS — PROJECT FORM V2
+   New Project + Edit Project
+   ========================================================= */
+
+.project-form-container {
+    width: min(
+        820px,
+        100%
+    );
+
+    margin: 0 auto;
+}
+
+/* =========================================================
+   BACK LINK
+   ========================================================= */
+
+.project-form-container > .project-back-link {
+    display: inline-flex;
+
+    align-items: center;
+
+    margin-bottom: 26px;
+
+    color: var(--cf-text-muted);
+
+    font-size: 11px;
+    font-weight: 650;
+
+    transition:
+        color 140ms ease,
+        transform 140ms ease;
+}
+
+.project-form-container > .project-back-link:hover {
+    color: var(--cf-green);
+
+    transform: translateX(-2px);
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.project-form-header {
+    margin-bottom: 26px;
+}
+
+.project-form-header
+.projects-eyebrow {
+    margin-bottom: 8px;
+
+    color: var(--cf-green);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 0.15em;
+}
+
+.project-form-header h1 {
+    margin: 0;
+
+    color: var(--cf-text);
+
+    font-size: clamp(
+        38px,
+        4vw,
+        52px
+    );
+
+    font-weight: 750;
+
+    line-height: 1;
+    letter-spacing: -0.055em;
+}
+
+.project-form-header > p:last-child {
+    max-width: 650px;
+
+    margin: 14px 0 0;
+
+    color: var(--cf-text-muted);
+
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+/* =========================================================
+   FORM SURFACE
+   ========================================================= */
+
+.project-form {
+    position: relative;
+
+    overflow: hidden;
+
+    display: grid;
+
+    gap: 23px;
+
+    border: 1px solid var(--cf-border);
+
+    border-radius: var(--cf-radius-xl);
+
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgb(114 225 155 / 6%),
+            transparent 24rem
+        ),
+        linear-gradient(
+            145deg,
+            rgb(14 21 27 / 98%),
+            rgb(8 14 19 / 98%)
+        );
+
+    padding: 28px;
+
+    box-shadow:
+        inset 0 1px 0
+        rgb(255 255 255 / 2%);
+}
+
+/* =========================================================
+   FIELDS
+   ========================================================= */
+
+.project-form-field {
+    display: grid;
+
+    gap: 9px;
+}
+
+.project-form-label {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+}
+
+.project-form-label label {
+    color: var(--cf-text-secondary);
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.project-form-label span {
+    color: var(--cf-text-subtle);
+
+    font-size: 8px;
+    font-weight: 800;
+
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.project-form-field input,
+.project-form-field textarea {
+    width: 100%;
+
+    border: 1px solid var(--cf-border);
+
+    border-radius: 10px;
+
+    outline: none;
+
+    background:
+        rgb(4 10 14 / 70%);
+
+    padding: 13px 14px;
+
+    color: var(--cf-text);
+
+    font-size: 12px;
+
+    resize: vertical;
+
+    transition:
+        border-color 140ms ease,
+        background 140ms ease,
+        box-shadow 140ms ease;
+}
+
+.project-form-field input {
+    min-height: 46px;
+}
+
+.project-form-field textarea {
+    min-height: 138px;
+
+    line-height: 1.65;
+}
+
+.project-form-field input::placeholder,
+.project-form-field textarea::placeholder {
+    color: var(--cf-text-subtle);
+}
+
+.project-form-field input:hover,
+.project-form-field textarea:hover {
+    border-color:
+        var(--cf-border-strong);
+}
+
+.project-form-field input:focus,
+.project-form-field textarea:focus {
+    border-color:
+        var(--cf-green-border);
+
+    background:
+        rgb(7 14 17 / 90%);
+
+    box-shadow:
+        0 0 0 3px
+        rgb(114 225 155 / 6%);
+}
+
+.project-form-field
+input[aria-invalid="true"],
+.project-form-field
+textarea[aria-invalid="true"] {
+    border-color:
+        rgb(239 107 114 / 55%);
+
+    box-shadow:
+        0 0 0 3px
+        rgb(239 107 114 / 5%);
+}
+
+/* =========================================================
+   ERRORS
+   ========================================================= */
+
+.field-error {
+    color: #ef858b;
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.project-form-error {
+    border: 1px solid
+        rgb(239 107 114 / 30%);
+
+    border-radius: 9px;
+
+    background:
+        rgb(239 107 114 / 6%);
+
+    padding: 11px 13px;
+
+    color: #ef858b;
+
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+/* =========================================================
+   FORM ACTIONS
+   ========================================================= */
+
+.project-form-actions {
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 9px;
+
+    border-top:
+        1px solid rgb(255 255 255 / 4%);
+
+    padding-top: 21px;
+}
+
+.project-form-actions
+.projects-primary-button {
+    min-height: 42px;
+
+    border: 1px solid
+        rgb(114 225 155 / 40%);
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--cf-green),
+            var(--cf-green-strong)
+        );
+
+    padding: 0 16px;
+
+    color: #04100a;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    box-shadow:
+        0 8px 24px
+        rgb(85 215 134 / 13%);
+}
+
+.project-form-actions
+.projects-primary-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    filter: brightness(1.05);
+}
+
+.project-form-actions
+.projects-primary-button:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.42;
+
+    transform: none;
+    box-shadow: none;
+}
+
+.project-secondary-button {
+    min-height: 42px;
+
+    border: 1px solid var(--cf-border);
+
+    border-radius: 9px;
+
+    background:
+        rgb(255 255 255 / 2%);
+
+    padding: 0 15px;
+
+    color: var(--cf-text-muted);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    transition:
+        border-color 140ms ease,
+        background 140ms ease,
+        color 140ms ease;
+}
+
+.project-secondary-button:hover {
+    border-color:
+        var(--cf-border-strong);
+
+    background:
+        rgb(255 255 255 / 4%);
+
+    color: var(--cf-text);
+}
+
+/* =========================================================
+   DANGER ZONE
+   ========================================================= */
+
+.project-danger-zone {
+    margin-top: 0;
+
+    border: 1px solid
+        rgb(239 107 114 / 24%);
+
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgb(55 18 22 / 14%),
+            rgb(24 11 14 / 8%)
+        );
+
+    padding: 17px 18px;
+}
+
+.project-danger-zone__heading {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 28px;
+}
+
+.project-danger-zone__heading
+.projects-eyebrow {
+    margin-bottom: 5px;
+
+    color: #ef858b;
+
+    font-size: 8px;
+}
+
+.project-danger-zone__heading h2 {
+    margin: 0;
+
+    color: var(--cf-text);
+
+    font-size: 14px;
+    font-weight: 700;
+
+    letter-spacing: -0.02em;
+}
+
+.project-danger-zone__heading
+> div > p:last-child {
+    max-width: 500px;
+
+    margin: 7px 0 0;
+
+    color: var(--cf-text-muted);
+
+    font-size: 9px;
+    line-height: 1.6;
+}
+
+.project-danger-button {
+    min-height: 36px;
+
+    flex-shrink: 0;
+
+    border: 1px solid
+        rgb(239 107 114 / 35%);
+
+    border-radius: 8px;
+
+    background:
+        rgb(239 107 114 / 6%);
+
+    padding: 0 12px;
+
+    color: #ef858b;
+
+    font-size: 9px;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        border-color 140ms ease,
+        background 140ms ease,
+        color 140ms ease;
+}
+
+.project-danger-button:hover:not(:disabled) {
+    border-color:
+        rgb(239 107 114 / 55%);
+
+    background:
+        rgb(239 107 114 / 10%);
+}
+
+.project-danger-button:disabled {
+    cursor: not-allowed;
+
+    opacity: 0.5;
+}
+
+.project-danger-button--confirm {
+    background:
+        rgb(239 107 114 / 12%);
+
+    color: #f29499;
+}
+
+/* =========================================================
+   ARCHIVE CONFIRMATION
+   ========================================================= */
+
+.project-archive-confirmation {
+    margin-top: 16px;
+
+    border-top:
+        1px solid rgb(239 107 114 / 15%);
+
+    padding-top: 16px;
+}
+
+.project-archive-confirmation strong {
+    color: var(--cf-text);
+
+    font-size: 11px;
+}
+
+.project-archive-confirmation p {
+    max-width: 540px;
+
+    margin: 6px 0 0;
+
+    color: var(--cf-text-muted);
+
+    font-size: 9px;
+    line-height: 1.6;
+}
+
+.project-archive-confirmation
+.project-form-error {
+    margin-top: 13px;
+}
+
+.project-archive-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    margin-top: 15px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+    .project-form-container {
+        width: 100%;
+    }
+
+    .project-form {
+        padding: 22px;
+    }
+
+    .project-danger-zone__heading {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    .project-danger-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .project-form-actions,
+    .project-archive-actions {
+        flex-direction: column-reverse;
+    }
+
+    .project-secondary-button,
+    .project-form-actions
+    .projects-primary-button,
+    .project-archive-actions
+    .project-danger-button {
+        width: 100%;
+    }
+}

@@ -202,9 +202,20 @@ export function ProjectDetailsPage() {
                         Analyses
                     </Link>
 
+                    {latestAnalysis?.status === 'COMPLETED' ? (
+                    <Link
+                        className="project-tab"
+                        to={
+                            `/app/projects/${project.id}/analyses/${latestAnalysis.id}/findings`
+                        }
+                    >
+                        Findings
+                    </Link>
+                ) : (
                     <span className="project-tab">
-            Findings
-          </span>
+                        Findings
+                    </span>
+                )}
                 </nav>
 
                 <section className="project-security-overview">

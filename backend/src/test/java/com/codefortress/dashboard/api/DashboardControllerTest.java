@@ -76,8 +76,10 @@ class DashboardControllerTest {
                 );
 
         Analysis analysis =
-                createAnalysis(
+                createCompletedAnalysis(
                         project,
+                        1,
+                        74,
                         1
                 );
 
@@ -100,12 +102,28 @@ class DashboardControllerTest {
                                 .value(1)
                 )
                 .andExpect(
+                        jsonPath("$.averageSecurityScore")
+                                .value(74)
+                )
+                .andExpect(
                         jsonPath("$.openFindings")
                                 .value(1)
                 )
                 .andExpect(
                         jsonPath("$.criticalOpenFindings")
                                 .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.highOpenFindings")
+                                .value(0)
+                )
+                .andExpect(
+                        jsonPath("$.mediumOpenFindings")
+                                .value(0)
+                )
+                .andExpect(
+                        jsonPath("$.lowOpenFindings")
+                                .value(0)
                 )
                 .andExpect(
                         jsonPath("$.latestAnalysis.id")
@@ -131,7 +149,7 @@ class DashboardControllerTest {
                 )
                 .andExpect(
                         jsonPath("$.latestAnalysis.status")
-                                .value("QUEUED")
+                                .value("COMPLETED")
                 )
                 .andExpect(
                         jsonPath("$.latestAnalysis.sourceFilename")
@@ -139,11 +157,11 @@ class DashboardControllerTest {
                 )
                 .andExpect(
                         jsonPath("$.latestAnalysis.securityScore")
-                                .doesNotExist()
+                                .value(74)
                 )
                 .andExpect(
                         jsonPath("$.latestAnalysis.findingsCount")
-                                .doesNotExist()
+                                .value(1)
                 )
                 .andExpect(
                         jsonPath("$.latestAnalysis.createdAt")
@@ -151,7 +169,34 @@ class DashboardControllerTest {
                 )
                 .andExpect(
                         jsonPath("$.latestAnalysis.completedAt")
-                                .doesNotExist()
+                                .isNotEmpty()
+                )
+                .andExpect(
+                        jsonPath("$.recentAnalyses")
+                                .isArray()
+                )
+                .andExpect(
+                        jsonPath("$.recentAnalyses.length()")
+                                .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.recentAnalyses[0].id")
+                                .value(
+                                        analysis.getId()
+                                                .toString()
+                                )
+                )
+                .andExpect(
+                        jsonPath("$.recentAnalyses[0].projectName")
+                                .value("CodeFortress")
+                )
+                .andExpect(
+                        jsonPath("$.recentAnalyses[0].status")
+                                .value("COMPLETED")
+                )
+                .andExpect(
+                        jsonPath("$.recentAnalyses[0].securityScore")
+                                .value(74)
                 );
     }
 
@@ -188,12 +233,32 @@ class DashboardControllerTest {
                                 .value(0)
                 )
                 .andExpect(
-                        jsonPath("$.criticalOpenFindings")
+                        jsonPath("$.highOpenFindings")
                                 .value(0)
+                )
+                .andExpect(
+                        jsonPath("$.mediumOpenFindings")
+                                .value(0)
+                )
+                .andExpect(
+                        jsonPath("$.lowOpenFindings")
+                                .value(0)
+                )
+                .andExpect(
+                        jsonPath("$.averageSecurityScore")
+                                .doesNotExist()
                 )
                 .andExpect(
                         jsonPath("$.latestAnalysis")
                                 .doesNotExist()
+                )
+                .andExpect(
+                        jsonPath("$.recentAnalyses")
+                                .isArray()
+                )
+                .andExpect(
+                        jsonPath("$.recentAnalyses")
+                                .isEmpty()
                 );
     }
 
@@ -235,9 +300,11 @@ class DashboardControllerTest {
                 );
     }
 
-    private Analysis createAnalysis(
+    private Analysis createCompletedAnalysis(
             Project project,
-            int sequenceNumber
+            int sequenceNumber,
+            int securityScore,
+            int findingsCount
     ) {
         Analysis analysis =
                 Analysis.queueUpload(
@@ -248,6 +315,21 @@ class DashboardControllerTest {
                         "rules-v1",
                         "score-v1"
                 );
+
+        analysis =
+                analysisRepository
+                        .saveAndFlush(
+                                analysis
+                        );
+
+        analysis.start();
+
+        analysis.complete(
+                securityScore,
+                1,
+                10L,
+                findingsCount
+        );
 
         return analysisRepository
                 .saveAndFlush(

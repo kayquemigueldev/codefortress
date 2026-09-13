@@ -81,23 +81,48 @@ class GetDashboardServiceTest {
                 "Another Owner Project"
         );
 
-        Analysis latestAnalysis = createAnalysis(
+        createCompletedAnalysis(
+                secondActiveProject,
+                1,
+                "second-project.zip",
+                90,
+                0
+        );
+
+        createCompletedAnalysis(
                 activeProject,
                 1,
-                "codefortress.zip"
+                "previous-codefortress.zip",
+                95,
+                0
         );
 
-        Analysis archivedAnalysis = createAnalysis(
-                archivedProject,
-                1,
-                "archived.zip"
-        );
+        Analysis latestAnalysis =
+                createCompletedAnalysis(
+                        activeProject,
+                        2,
+                        "codefortress.zip",
+                        70,
+                        4
+                );
 
-        Analysis anotherOwnerAnalysis = createAnalysis(
-                anotherOwnerProject,
-                1,
-                "other.zip"
-        );
+        Analysis archivedAnalysis =
+                createCompletedAnalysis(
+                        archivedProject,
+                        1,
+                        "archived.zip",
+                        100,
+                        1
+                );
+
+        Analysis anotherOwnerAnalysis =
+                createCompletedAnalysis(
+                        anotherOwnerProject,
+                        1,
+                        "other.zip",
+                        10,
+                        1
+                );
 
         createFinding(
                 latestAnalysis,
@@ -112,15 +137,27 @@ class GetDashboardServiceTest {
         );
 
         createFinding(
+                latestAnalysis,
+                Severity.MEDIUM,
+                "c".repeat(64)
+        );
+
+        createFinding(
+                latestAnalysis,
+                Severity.LOW,
+                "d".repeat(64)
+        );
+
+        createFinding(
                 archivedAnalysis,
                 Severity.CRITICAL,
-                "c".repeat(64)
+                "e".repeat(64)
         );
 
         createFinding(
                 anotherOwnerAnalysis,
                 Severity.CRITICAL,
-                "d".repeat(64)
+                "f".repeat(64)
         );
 
         DashboardOverview overview =
@@ -133,11 +170,27 @@ class GetDashboardServiceTest {
         ).isEqualTo(2);
 
         assertThat(
+                overview.averageSecurityScore()
+        ).isEqualTo(80);
+
+        assertThat(
                 overview.openFindings()
-        ).isEqualTo(2);
+        ).isEqualTo(4);
 
         assertThat(
                 overview.criticalOpenFindings()
+        ).isEqualTo(1);
+
+        assertThat(
+                overview.highOpenFindings()
+        ).isEqualTo(1);
+
+        assertThat(
+                overview.mediumOpenFindings()
+        ).isEqualTo(1);
+
+        assertThat(
+                overview.lowOpenFindings()
         ).isEqualTo(1);
 
         assertThat(
@@ -164,7 +217,7 @@ class GetDashboardServiceTest {
 
         assertThat(
                 overview.latestAnalysis().sequenceNumber()
-        ).isEqualTo(1);
+        ).isEqualTo(2);
 
         assertThat(
                 overview.latestAnalysis().sourceFilename()
@@ -173,18 +226,12 @@ class GetDashboardServiceTest {
         );
 
         assertThat(
-                overview.latestAnalysis().status()
-        ).isEqualTo(
-                latestAnalysis.getStatus()
-        );
-
-        assertThat(
                 overview.latestAnalysis().securityScore()
-        ).isNull();
+        ).isEqualTo((short) 70);
 
         assertThat(
                 overview.latestAnalysis().findingsCount()
-        ).isNull();
+        ).isEqualTo(4);
 
         assertThat(
                 overview.latestAnalysis().createdAt()
@@ -192,7 +239,30 @@ class GetDashboardServiceTest {
 
         assertThat(
                 overview.latestAnalysis().completedAt()
-        ).isNull();
+        ).isNotNull();
+
+        assertThat(
+                overview.recentAnalyses()
+        ).hasSize(3);
+
+        assertThat(
+                overview.recentAnalyses()
+                        .getFirst()
+                        .id()
+        ).isEqualTo(
+                latestAnalysis.getId()
+        );
+
+        assertThat(
+                overview.recentAnalyses()
+        )
+                .extracting(
+                        DashboardOverview.LatestAnalysis::projectName
+                )
+                .containsOnly(
+                        "CodeFortress",
+                        "Another Active Project"
+                );
 
         assertThat(
                 secondActiveProject.getId()
@@ -276,10 +346,12 @@ class GetDashboardServiceTest {
                 );
     }
 
-    private Analysis createAnalysis(
+    private Analysis createCompletedAnalysis(
             Project project,
             int sequenceNumber,
-            String filename
+            String filename,
+            int securityScore,
+            int findingsCount
     ) {
         Analysis analysis =
                 Analysis.queueUpload(
@@ -290,6 +362,21 @@ class GetDashboardServiceTest {
                         "rules-v1",
                         "score-v1"
                 );
+
+        analysis =
+                analysisRepository
+                        .saveAndFlush(
+                                analysis
+                        );
+
+        analysis.start();
+
+        analysis.complete(
+                securityScore,
+                1,
+                10L,
+                findingsCount
+        );
 
         return analysisRepository
                 .saveAndFlush(

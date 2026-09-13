@@ -38,6 +38,32 @@ public interface AnalysisRepository
             ProjectStatus projectStatus
     );
 
+    List<Analysis> findTop5ByProject_Owner_IdAndProject_StatusOrderByCreatedAtDesc(
+            UUID ownerId,
+            ProjectStatus projectStatus
+    );
+
+    @Query("""
+        SELECT AVG(analysis.securityScore)
+        FROM Analysis analysis
+        WHERE analysis.project.owner.id = :ownerId
+          AND analysis.project.status = :projectStatus
+          AND analysis.status = :analysisStatus
+          AND analysis.securityScore IS NOT NULL
+          AND analysis.sequenceNumber = (
+              SELECT MAX(latest.sequenceNumber)
+              FROM Analysis latest
+              WHERE latest.project.id = analysis.project.id
+                AND latest.status = :analysisStatus
+                AND latest.securityScore IS NOT NULL
+          )
+        """)
+    Double findAverageLatestSecurityScore(
+            @Param("ownerId") UUID ownerId,
+            @Param("projectStatus") ProjectStatus projectStatus,
+            @Param("analysisStatus") AnalysisStatus analysisStatus
+    );
+
 
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

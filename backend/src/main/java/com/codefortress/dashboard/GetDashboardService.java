@@ -4,6 +4,7 @@ import com.codefortress.analysis.AnalysisRepository;
 import com.codefortress.analysis.FindingRepository;
 import com.codefortress.analysis.FindingStatus;
 import com.codefortress.analysis.Severity;
+import com.codefortress.analysis.AnalysisStatus;
 import com.codefortress.identity.user.CurrentUserService;
 import com.codefortress.project.ProjectRepository;
 import com.codefortress.project.ProjectStatus;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class GetDashboardService {
@@ -59,6 +61,48 @@ public class GetDashboardService {
                                 Severity.CRITICAL
                         );
 
+        long highOpenFindings =
+                findingRepository
+                        .countByAnalysis_Project_Owner_IdAndAnalysis_Project_StatusAndStatusAndSeverity(
+                                ownerId,
+                                ProjectStatus.ACTIVE,
+                                FindingStatus.OPEN,
+                                Severity.HIGH
+                        );
+
+        long mediumOpenFindings =
+                findingRepository
+                        .countByAnalysis_Project_Owner_IdAndAnalysis_Project_StatusAndStatusAndSeverity(
+                                ownerId,
+                                ProjectStatus.ACTIVE,
+                                FindingStatus.OPEN,
+                                Severity.MEDIUM
+                        );
+
+        long lowOpenFindings =
+                findingRepository
+                        .countByAnalysis_Project_Owner_IdAndAnalysis_Project_StatusAndStatusAndSeverity(
+                                ownerId,
+                                ProjectStatus.ACTIVE,
+                                FindingStatus.OPEN,
+                                Severity.LOW
+                        );
+
+        Double averageScore =
+                analysisRepository
+                        .findAverageLatestSecurityScore(
+                                ownerId,
+                                ProjectStatus.ACTIVE,
+                                AnalysisStatus.COMPLETED
+                        );
+
+        Integer averageSecurityScore =
+                averageScore == null
+                        ? null
+                        : (int) Math.round(
+                        averageScore
+                );
+
         DashboardOverview.LatestAnalysis latestAnalysis =
                 analysisRepository
                         .findTopByProject_Owner_IdAndProject_StatusOrderByCreatedAtDesc(
@@ -68,11 +112,29 @@ public class GetDashboardService {
                         .map(DashboardOverview.LatestAnalysis::from)
                         .orElse(null);
 
+        List<DashboardOverview.LatestAnalysis>
+                recentAnalyses =
+                analysisRepository
+                        .findTop5ByProject_Owner_IdAndProject_StatusOrderByCreatedAtDesc(
+                                ownerId,
+                                ProjectStatus.ACTIVE
+                        )
+                        .stream()
+                        .map(
+                                DashboardOverview.LatestAnalysis::from
+                        )
+                        .toList();
+
         return new DashboardOverview(
                 activeProjects,
+                averageSecurityScore,
                 openFindings,
                 criticalOpenFindings,
-                latestAnalysis
+                highOpenFindings,
+                mediumOpenFindings,
+                lowOpenFindings,
+                latestAnalysis,
+                recentAnalyses
         );
     }
 }

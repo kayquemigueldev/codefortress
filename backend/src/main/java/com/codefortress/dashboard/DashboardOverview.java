@@ -4,13 +4,19 @@ import com.codefortress.analysis.Analysis;
 import com.codefortress.analysis.AnalysisStatus;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record DashboardOverview(
         long activeProjects,
+        Integer averageSecurityScore,
         long openFindings,
         long criticalOpenFindings,
-        LatestAnalysis latestAnalysis
+        long highOpenFindings,
+        long mediumOpenFindings,
+        long lowOpenFindings,
+        LatestAnalysis latestAnalysis,
+        List<LatestAnalysis> recentAnalyses
 ) {
 
     public record LatestAnalysis(

@@ -4,13 +4,19 @@ import com.codefortress.analysis.AnalysisStatus;
 import com.codefortress.dashboard.DashboardOverview;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record DashboardResponse(
         long activeProjects,
+        Integer averageSecurityScore,
         long openFindings,
         long criticalOpenFindings,
-        LatestAnalysisResponse latestAnalysis
+        long highOpenFindings,
+        long mediumOpenFindings,
+        long lowOpenFindings,
+        LatestAnalysisResponse latestAnalysis,
+        List<LatestAnalysisResponse> recentAnalyses
 ) {
 
     public static DashboardResponse from(
@@ -23,11 +29,24 @@ public record DashboardResponse(
                         overview.latestAnalysis()
                 );
 
+        List<LatestAnalysisResponse> recent =
+                overview.recentAnalyses()
+                        .stream()
+                        .map(
+                                LatestAnalysisResponse::from
+                        )
+                        .toList();
+
         return new DashboardResponse(
                 overview.activeProjects(),
+                overview.averageSecurityScore(),
                 overview.openFindings(),
                 overview.criticalOpenFindings(),
-                latest
+                overview.highOpenFindings(),
+                overview.mediumOpenFindings(),
+                overview.lowOpenFindings(),
+                latest,
+                recent
         );
     }
 

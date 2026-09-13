@@ -17,7 +17,12 @@ export type DashboardLatestAnalysis = {
 
 export type DashboardOverview = {
     activeProjects: number
+    averageSecurityScore: number | null
     openFindings: number
     criticalOpenFindings: number
+    highOpenFindings: number
+    mediumOpenFindings: number
+    lowOpenFindings: number
     latestAnalysis: DashboardLatestAnalysis | null
+    recentAnalyses: DashboardLatestAnalysis[]
 }
